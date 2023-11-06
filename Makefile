@@ -11,9 +11,6 @@
 ##
 
 LIBDPDK_SRC=dpdk/*
-FPSYNC_DIR=fpsync
-
-all: fpsync
 
 .PHONY: libdpdk
 libdpdk: $(LIBDPDK_SRC)
@@ -25,15 +22,3 @@ libdpdk: $(LIBDPDK_SRC)
 .PHONY: libdpdk_clean
 libdpdk_clean:
 	$(Q)ninja -C dpdk/build -t clean $(P)
-
-
-.PHONY: fpsync
-fpsync: $(FPSYNC_DIR)
-	@echo "  fpsync"
-	$(Q)meson setup $(FPSYNC_DIR)/build $(FPSYNC_DIR) $(P)
-	$(Q)meson configure $(FPSYNC_DIR)/build $(P)
-	$(Q)meson compile -C $(FPSYNC_DIR)/build $(P)
-
-.PHONY: fpsync_clean
-fpsync_clean:
-	$(Q)ninja -C $(FPSYNC_DIR)/build -t clean $(P)
