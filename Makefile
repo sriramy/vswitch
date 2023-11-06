@@ -11,35 +11,9 @@
 ##
 
 LIBDPDK_SRC=dpdk/*
-BIN_DIR = bin
-SRC_DIR = src
+FPSYNC_DIR=fpsync
 
-CC ?= gcc
-PKG_CONFIG_PATH ?= ~/xc/workspace/sys/usr/lib/pkgconfig
-CFLAGS ?= -g -Wall -Wextra -I$(SRC_DIR) `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libmnl`
-LDFLAGS ?= `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs libmnl`
-
-SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJ = $(patsubst $(SRC_DIR)/%.c, $(SRC_DIR)/.%.o, $(SRC))
-BINARIES = $(patsubst $(SRC_DIR)/.%.o, $(BIN_DIR)/%, $(OBJ))
-
-all: $(BINARIES)
-
-$(SRC_DIR)/.%.o: $(SRC_DIR)/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(BIN_DIR)/%: $(SRC_DIR)/.%.o
-	@mkdir -p $(BIN_DIR)
-	$(CC) -o $@ $< $(LDFLAGS) 
-
-.PHONY: clean
-clean:
-	@rm -rf $(BINARIES) $(OBJ)
-
-.PHONY: install
-install:
-	install -d $(DESTDIR)/$(PREFIX)/bin
-	install -m 755 $(BINARIES) -t $(DESTDIR)/$(PREFIX)/bin
+all: fpsync
 
 .PHONY: libdpdk
 libdpdk: $(LIBDPDK_SRC)
@@ -52,8 +26,14 @@ libdpdk: $(LIBDPDK_SRC)
 libdpdk_clean:
 	$(Q)ninja -C dpdk/build -t clean $(P)
 
-.PHONY: help
-help:
-	@grep '^##' $(lastword $(MAKEFILE_LIST)) | cut -c3-
-	@echo "Binaries:"
-	@echo "  $(BINARIES)"
+
+.PHONY: fpsync
+fpsync: $(FPSYNC_DIR)
+	@echo "  fpsync"
+	$(Q)meson setup $(FPSYNC_DIR)/build $(FPSYNC_DIR) $(P)
+	$(Q)meson configure $(FPSYNC_DIR)/build $(P)
+	$(Q)meson compile -C $(FPSYNC_DIR)/build $(P)
+
+.PHONY: fpsync_clean
+fpsync_clean:
+	$(Q)ninja -C $(FPSYNC_DIR)/build -t clean $(P)
