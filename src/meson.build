@@ -8,6 +8,7 @@ if not build
 endif
 
 sources = files(
+        'ethdev.c',
         'options.c',
         'main.c',
 )
