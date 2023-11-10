@@ -8,18 +8,8 @@ if not build
 endif
 
 sources = files(
-        'cli.c',
-        'conn.c',
-        'ethdev_rx.c',
-        'ethdev.c',
-        'graph.c',
-        'ip4_route.c',
-        'ip6_route.c',
-        'l3fwd.c',
+        'options.c',
         'main.c',
-        'mempool.c',
-        'neigh.c',
-        'utils.c',
 )
 
 deps += [dependency('threads')]

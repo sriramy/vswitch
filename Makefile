@@ -19,7 +19,7 @@ all: vswitch
 libdpdk: $(LIBDPDK_SRC)
 	@echo "  libdpdk"
 	$(Q)meson setup dpdk/build dpdk $(P)
-	$(Q)meson configure -Dmax_lcores=4 -Denable_apps=graph dpdk/build $(P)
+	$(Q)meson configure -Dmax_lcores=4 -Denable_apps=test-pmd dpdk/build $(P)
 	$(Q)meson compile -C dpdk/build $(P)
 
 .PHONY: libdpdk_clean
@@ -33,7 +33,7 @@ libdpdk_install:
 .PHONY: vswitch
 vswitch: $(VSWITCH_SRC)
 	@echo "  vswitch"
-	$(Q)meson setup build $(P)
+	$(Q)meson setup build --buildtype debug $(P)
 	$(Q)meson configure build $(P)
 	$(Q)meson compile -C build $(P)
 
