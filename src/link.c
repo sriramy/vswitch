@@ -18,8 +18,17 @@ struct link_show_cmd_tokens {
 	cmdline_fixed_string_t show;
 };
 
+struct link_dev_show_cmd_tokens {
+	cmdline_fixed_string_t cmd;
+	cmdline_fixed_string_t dev;
+	cmdline_fixed_string_t show;
+};
+
 static const char
 cmd_link_show_help[] = "link show";
+
+static const char
+cmd_link_dev_show_help[] = "link <dev> show";
 
 static int
 link_show_port(struct cmdline *cl, uint16_t port_id)
@@ -71,7 +80,21 @@ link_show_port(struct cmdline *cl, uint16_t port_id)
 }
 
 static void
-cli_link_show(__rte_unused void *parsed_result, struct cmdline *cl, void *data __rte_unused)
+cli_link_dev_show(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct link_dev_show_cmd_tokens *res = parsed_result;
+	int rc = -EINVAL;
+	uint16_t port_id;
+
+	rc = rte_eth_dev_get_port_by_name(res->dev, &port_id);
+	if (rc < 0)
+		return;
+
+	link_show_port(cl, port_id);
+}
+
+static void
+cli_link_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
         uint16_t port_id;
         RTE_ETH_FOREACH_DEV(port_id) {
@@ -79,9 +102,9 @@ cli_link_show(__rte_unused void *parsed_result, struct cmdline *cl, void *data _
         }
 }
 
-cmdline_parse_token_string_t link_cmd =
+cmdline_parse_token_string_t link_show_cmd =
 	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, cmd, "link");
-cmdline_parse_token_string_t link_show =
+cmdline_parse_token_string_t link_show_show =
 	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, show, "show");
 
 cmdline_parse_inst_t link_show_cmd_ctx = {
@@ -89,8 +112,27 @@ cmdline_parse_inst_t link_show_cmd_ctx = {
 	.data = NULL,
 	.help_str = cmd_link_show_help,
 	.tokens = {
-		(void *)&link_cmd,
-		(void *)&link_show,
+		(void *)&link_show_cmd,
+		(void *)&link_show_show,
+		NULL,
+	},
+};
+
+cmdline_parse_token_string_t link_dev_show_cmd =
+	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, cmd, "link");
+cmdline_parse_token_string_t link_dev_show_dev =
+	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, dev, NULL);
+cmdline_parse_token_string_t link_dev_show_show =
+	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, show, "show");
+
+cmdline_parse_inst_t link_dev_show_cmd_ctx = {
+	.f = cli_link_dev_show,
+	.data = NULL,
+	.help_str = cmd_link_dev_show_help,
+	.tokens = {
+		(void *)&link_dev_show_cmd,
+		(void *)&link_dev_show_dev,
+		(void *)&link_dev_show_show,
 		NULL,
 	},
 };
