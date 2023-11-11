@@ -21,10 +21,10 @@
 static volatile int force_quit = 0;
 
 static struct params p = default_params;
-extern cmdline_parse_inst_t ethdev_show_cmd_ctx;
+extern cmdline_parse_inst_t link_show_cmd_ctx;
 
 cmdline_parse_ctx_t modules_ctx[] = {
-	(cmdline_parse_inst_t *)&ethdev_show_cmd_ctx,
+	(cmdline_parse_inst_t *)&link_show_cmd_ctx,
 };
 
 #define MAX_BACKTRACE   32

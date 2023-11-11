@@ -13,16 +13,16 @@
 #include <cmdline_parse_string.h>
 #include <cmdline_rdline.h>
 
-struct ethdev_show_cmd_tokens {
+struct link_show_cmd_tokens {
 	cmdline_fixed_string_t cmd;
 	cmdline_fixed_string_t show;
 };
 
 static const char
-cmd_ethdev_show_help[] = "ethdev show";
+cmd_link_show_help[] = "link show";
 
 static int
-ethdev_show_port(struct cmdline *cl, uint16_t port_id)
+link_show_port(struct cmdline *cl, uint16_t port_id)
 {
        	uint16_t mtu = 0;
 	struct rte_eth_dev_info info;
@@ -71,26 +71,26 @@ ethdev_show_port(struct cmdline *cl, uint16_t port_id)
 }
 
 static void
-cli_ethdev_show(__rte_unused void *parsed_result, struct cmdline *cl, void *data __rte_unused)
+cli_link_show(__rte_unused void *parsed_result, struct cmdline *cl, void *data __rte_unused)
 {
         uint16_t port_id;
         RTE_ETH_FOREACH_DEV(port_id) {
-                ethdev_show_port(cl, port_id);
+                link_show_port(cl, port_id);
         }
 }
 
-cmdline_parse_token_string_t ethdev_cmd =
-	TOKEN_STRING_INITIALIZER(struct ethdev_show_cmd_tokens, cmd, "ethdev");
-cmdline_parse_token_string_t ethdev_show =
-	TOKEN_STRING_INITIALIZER(struct ethdev_show_cmd_tokens, show, "show");
+cmdline_parse_token_string_t link_cmd =
+	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, cmd, "link");
+cmdline_parse_token_string_t link_show =
+	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, show, "show");
 
-cmdline_parse_inst_t ethdev_show_cmd_ctx = {
-	.f = cli_ethdev_show,
+cmdline_parse_inst_t link_show_cmd_ctx = {
+	.f = cli_link_show,
 	.data = NULL,
-	.help_str = cmd_ethdev_show_help,
+	.help_str = cmd_link_show_help,
 	.tokens = {
-		(void *)&ethdev_cmd,
-		(void *)&ethdev_show,
+		(void *)&link_cmd,
+		(void *)&link_show,
 		NULL,
 	},
 };
