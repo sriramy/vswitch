@@ -10,6 +10,7 @@ endif
 sources = files(
         'cli.c',
         'link.c',
+        'mempool.c',
         'options.c',
         'main.c',
 )

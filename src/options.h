@@ -14,7 +14,7 @@ struct params {
 	bool enable_graph_stats;
 };
 
-static const struct params default_params = {
+static const struct params params_default = {
 	.config = "/etc/vswitch/init.cli",
 	.enable_graph_stats = true,
 };

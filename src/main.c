@@ -21,7 +21,7 @@
 
 static volatile int force_quit = 0;
 
-static struct params p = default_params;
+static struct params p = params_default;
 
 #define MAX_BACKTRACE   32
 static void signal_handler(int sig)
