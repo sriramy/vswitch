@@ -8,6 +8,7 @@ if not build
 endif
 
 sources = files(
+        'cli.c',
         'link.c',
         'options.c',
         'main.c',

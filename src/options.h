@@ -3,6 +3,9 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
+#ifndef __VSWITCH_SRC_OPTIONS_H_
+#define __VSWITCH_SRC_OPTIONS_H_
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -17,3 +20,5 @@ static const struct params default_params = {
 };
 
 int options_parse(struct params *p, int argc, char **argv);
+
+#endif /* __VSWITCH_SRC_OPTIONS_H_ */

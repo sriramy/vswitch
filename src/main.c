@@ -15,23 +15,19 @@
 #include <cmdline.h>
 #include <cmdline_socket.h>
 
+#include "cli.h"
 #include "log.h"
 #include "options.h"
 
 static volatile int force_quit = 0;
 
 static struct params p = default_params;
-extern cmdline_parse_inst_t link_show_cmd_ctx;
-extern cmdline_parse_inst_t link_dev_show_cmd_ctx;
-
-cmdline_parse_ctx_t modules_ctx[] = {
-	(cmdline_parse_inst_t *)&link_show_cmd_ctx,
-	(cmdline_parse_inst_t *)&link_dev_show_cmd_ctx,
-};
 
 #define MAX_BACKTRACE   32
 static void signal_handler(int sig)
 {
+        char const *signal_str = sigabbrev_np(sig);
+
 	if (sig == SIGINT) {
 		signal(sig, SIG_IGN);
 		printf("Ctrl-C> Do you really want to quit? [y/n] ");
@@ -46,7 +42,7 @@ static void signal_handler(int sig)
 		return;
 	}
 
-	RTE_LOG(CRIT, USER1, "\nCaught SIGNAL:%d\n\n", sig);
+	RTE_LOG(CRIT, USER1, "Caught %s\n\n", signal_str);
 
 	void *array[MAX_BACKTRACE];
 	size_t size = backtrace(array, MAX_BACKTRACE);
@@ -81,7 +77,7 @@ int main(int argc, char **argv)
 		goto error;
 	}
 
-	cl = cmdline_stdin_new(modules_ctx, "graph> ");
+	cl = cmdline_stdin_new(commands_ctx, "graph> ");
 	if (cl == NULL)
 		return -1;
 

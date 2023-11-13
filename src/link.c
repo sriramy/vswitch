@@ -15,11 +15,6 @@
 
 struct link_show_cmd_tokens {
 	cmdline_fixed_string_t cmd;
-	cmdline_fixed_string_t show;
-};
-
-struct link_dev_show_cmd_tokens {
-	cmdline_fixed_string_t cmd;
 	cmdline_fixed_string_t dev;
 	cmdline_fixed_string_t show;
 };
@@ -82,7 +77,7 @@ link_show_port(struct cmdline *cl, uint16_t port_id)
 static void
 cli_link_dev_show(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
-	struct link_dev_show_cmd_tokens *res = parsed_result;
+	struct link_show_cmd_tokens *res = parsed_result;
 	int rc = -EINVAL;
 	uint16_t port_id;
 
@@ -104,6 +99,8 @@ cli_link_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused
 
 cmdline_parse_token_string_t link_show_cmd =
 	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, cmd, "link");
+cmdline_parse_token_string_t link_show_dev =
+	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, dev, NULL);
 cmdline_parse_token_string_t link_show_show =
 	TOKEN_STRING_INITIALIZER(struct link_show_cmd_tokens, show, "show");
 
@@ -118,21 +115,14 @@ cmdline_parse_inst_t link_show_cmd_ctx = {
 	},
 };
 
-cmdline_parse_token_string_t link_dev_show_cmd =
-	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, cmd, "link");
-cmdline_parse_token_string_t link_dev_show_dev =
-	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, dev, NULL);
-cmdline_parse_token_string_t link_dev_show_show =
-	TOKEN_STRING_INITIALIZER(struct link_dev_show_cmd_tokens, show, "show");
-
 cmdline_parse_inst_t link_dev_show_cmd_ctx = {
 	.f = cli_link_dev_show,
 	.data = NULL,
 	.help_str = cmd_link_dev_show_help,
 	.tokens = {
-		(void *)&link_dev_show_cmd,
-		(void *)&link_dev_show_dev,
-		(void *)&link_dev_show_show,
+		(void *)&link_show_cmd,
+		(void *)&link_show_dev,
+		(void *)&link_show_show,
 		NULL,
 	},
 };
