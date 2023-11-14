@@ -26,8 +26,8 @@ struct mempool_config_cmd_tokens {
 	uint16_t node;
 };
 
-extern cmdline_parse_inst_t mempool_config_add_cmd_ctx;
-extern cmdline_parse_inst_t mempool_config_rem_show_cmd_ctx;
+extern cmdline_parse_inst_t mempool_add_cmd_ctx;
+extern cmdline_parse_inst_t mempool_rem_show_cmd_ctx;
 
 struct rte_mempool*
 mempool_config_get_rte_mempool(char const *mp_name);

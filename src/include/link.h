@@ -20,11 +20,13 @@ struct link_rss_config {
 
 struct link_config {
 	char link_name[RTE_ETH_NAME_MAX_LEN];
-	uint16_t port_id;
+	uint16_t link_id;
+	int numa_node;
 
 	struct {
 		uint32_t nb_queues;
 		uint32_t queue_sz;
+		char mp_name[RTE_MEMPOOL_NAMESIZE];
 		struct rte_mempool *mp;
 		struct link_rss_config *rss;
 	} rx;
@@ -43,5 +45,11 @@ struct link {
 	struct link_config config;
 };
 TAILQ_HEAD(link_head, link);
+
+struct rte_eth_conf *link_config_default_get();
+
+struct link *link_config_get(char const *name);
+int link_config_add(struct link_config *l);
+int link_config_rem(char const *name);
 
 #endif /* __VSWITCH_SRC_API_LINK_H_ */

@@ -20,8 +20,11 @@
 cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&link_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&link_dev_show_cmd_ctx,
-        (cmdline_parse_inst_t *)&link_config_cmd_ctx,
-        (cmdline_parse_inst_t *)&mempool_config_add_cmd_ctx,
-        (cmdline_parse_inst_t *)&mempool_config_rem_show_cmd_ctx,
+	(cmdline_parse_inst_t *)&link_dev_config_add_cmd_ctx,
+	(cmdline_parse_inst_t *)&link_dev_config_rem_cmd_ctx,
+	(cmdline_parse_inst_t *)&link_dev_config_show_cmd_ctx,
+
+	(cmdline_parse_inst_t *)&mempool_add_cmd_ctx,
+	(cmdline_parse_inst_t *)&mempool_rem_show_cmd_ctx,
 	NULL,
 };

@@ -8,14 +8,14 @@ if not build
 endif
 
 sources = files(
-        'cli/cli.c',
-        'cli/cli_link.c',
-        'cli/cli_mempool.c',
+        'link.c',
+        'mempool.c',
         'options.c',
         'main.c',
 )
 
-includes = include_directories('api')
+subdir('cli')
+includes = include_directories('include')
 
 deps += [dependency('threads')]
 deps += [dependency('numa', required: true)]

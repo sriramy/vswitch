@@ -26,4 +26,8 @@ struct mempool {
 };
 TAILQ_HEAD(mempool_head, mempool);
 
+struct mempool *mempool_config_get(char const *name);
+int mempool_config_add(struct mempool_config *config);
+int mempool_config_rem(char const *name);
+
 #endif /*__VSWITCH_SRC_API_MEMPOOL_H_ */
