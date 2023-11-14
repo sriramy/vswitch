@@ -50,4 +50,5 @@ subdir('src')
 executable('vswitch',
     sources: sources,
     install: true,
+    include_directories: includes,
     dependencies: deps) 

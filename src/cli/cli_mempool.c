@@ -10,8 +10,8 @@
 #include <cmdline_parse_num.h>
 
 #include "cli.h"
+#include "cli_mempool.h"
 #include "mempool.h"
-#include "mempool_priv.h"
 
 static const char
 cmd_mempool_add_help[] = "mempool add <mp_name> [size <mbuf_sz>] [mbufs <nb_mbufs>] "

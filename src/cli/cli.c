@@ -14,8 +14,8 @@
 #include <cmdline_rdline.h>
 
 #include "cli.h"
-#include "link.h"
-#include "mempool.h"
+#include "cli_link.h"
+#include "cli_mempool.h"
 
 cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&link_show_cmd_ctx,

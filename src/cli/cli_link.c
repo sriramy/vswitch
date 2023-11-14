@@ -16,8 +16,8 @@
 #include <cmdline_rdline.h>
 
 #include "cli.h"
+#include "cli_link.h"
 #include "link.h"
-#include "link_priv.h"
 
 static const char
 cmd_link_show_help[] = "link show";
@@ -161,6 +161,7 @@ cli_link_config(void *parsed_result, struct cmdline *cl, __rte_unused void *data
 		}
 	}
 
+	TAILQ_INSERT_TAIL(&link_node, l, next);
 	return;
 
 err:

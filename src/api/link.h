@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __VSWITCH_SRC_LINK_PRIV_H_
-#define __VSWITCH_SRC_LINK_PRIV_H_
+#ifndef __VSWITCH_SRC_API_LINK_H_
+#define __VSWITCH_SRC_API_LINK_H_
 
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
@@ -44,4 +44,4 @@ struct link {
 };
 TAILQ_HEAD(link_head, link);
 
-#endif /* __VSWITCH_SRC_LINK_PRIV_H_ */
+#endif /* __VSWITCH_SRC_API_LINK_H_ */

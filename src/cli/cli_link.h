@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __VSWITCH_SRC_LINK_H_
-#define __VSWITCH_SRC_LINK_H_
+#ifndef __VSWITCH_SRC_CLI_LINK_H_
+#define __VSWITCH_SRC_CLI_LINK_H_
 
 #include <cmdline.h>
 #include <cmdline_parse.h>
@@ -31,4 +31,4 @@ extern cmdline_parse_inst_t link_show_cmd_ctx;
 extern cmdline_parse_inst_t link_dev_show_cmd_ctx;
 extern cmdline_parse_inst_t link_config_cmd_ctx;
 
-#endif /* __VSWITCH_SRC_LINK_H_ */
+#endif /* __VSWITCH_SRC_CLI_LINK_H_ */

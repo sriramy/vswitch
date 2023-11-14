@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __VSWITCH_SRC_MEMPOOL_H_
-#define __VSWITCH_SRC_MEMPOOL_H_
+#ifndef __VSWITCH_SRC_CLI_MEMPOOL_H_
+#define __VSWITCH_SRC_CLI_MEMPOOL_H_
 
 #include <rte_mempool.h>
 
@@ -32,4 +32,4 @@ extern cmdline_parse_inst_t mempool_config_rem_show_cmd_ctx;
 struct rte_mempool*
 mempool_config_get_rte_mempool(char const *mp_name);
 
-#endif /* __VSWITCH_SRC_MEMPOOL_H_*/
+#endif /* __VSWITCH_SRC_CLI_MEMPOOL_H_*/

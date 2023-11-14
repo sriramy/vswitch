@@ -3,8 +3,10 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __VSWITCH_SRC_MEMPOOL_PRIV_H_
-#define __VSWITCH_SRC_MEMPOOL_PRIV_H_
+#ifndef __VSWITCH_SRC_API_MEMPOOL_H_
+#define __VSWITCH_SRC_API_MEMPOOL_H_
+
+#include <sys/queue.h>
 
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
@@ -24,4 +26,4 @@ struct mempool {
 };
 TAILQ_HEAD(mempool_head, mempool);
 
-#endif /*__VSWITCH_SRC_MEMPOOL_PRIV_H_ */
+#endif /*__VSWITCH_SRC_API_MEMPOOL_H_ */

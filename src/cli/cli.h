@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __VSWITCH_SRC_CLI_H_
-#define __VSWITCH_SRC_CLI_H_
+#ifndef __VSWITCH_SRC_CLI_CLI_H_
+#define __VSWITCH_SRC_CLI_CLI_H_
 
 #include <cmdline.h>
 #include <cmdline_parse.h>
@@ -26,4 +26,4 @@ extern cmdline_parse_ctx_t commands_ctx[];
 #define MSG_ERR_EXIST           "Already exists\n"
 #define MSG_ERR_NOENT           "Not found\n"
 
-#endif /* __VSWITCH_SRC_CLI_H_ */
+#endif /* __VSWITCH_SRC_CLI_CLI_H_ */

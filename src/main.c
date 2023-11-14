@@ -15,7 +15,7 @@
 #include <cmdline.h>
 #include <cmdline_socket.h>
 
-#include "cli.h"
+#include "cli/cli.h"
 #include "log.h"
 #include "options.h"
 
