@@ -20,10 +20,12 @@ struct link_config_cmd_tokens {
 	cmdline_fixed_string_t dev;
 	cmdline_fixed_string_t config;
 	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t promiscuous;
 	cmdline_fixed_string_t rxq;
 	cmdline_fixed_string_t txq;
 	cmdline_fixed_string_t mempool;
 	cmdline_fixed_string_t mp_name;
+	uint16_t mtu;
 	uint16_t nb_rxq;
 	uint16_t nb_txq;
 };
@@ -33,5 +35,7 @@ extern cmdline_parse_inst_t link_dev_show_cmd_ctx;
 extern cmdline_parse_inst_t link_dev_config_add_cmd_ctx;
 extern cmdline_parse_inst_t link_dev_config_rem_cmd_ctx;
 extern cmdline_parse_inst_t link_dev_config_show_cmd_ctx;
+extern cmdline_parse_inst_t link_dev_config_set_promiscuous_cmd_ctx;
+extern cmdline_parse_inst_t link_dev_config_set_mtu_cmd_ctx;
 
 #endif /* __VSWITCH_SRC_CLI_LINK_H_ */

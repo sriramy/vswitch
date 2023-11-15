@@ -34,6 +34,12 @@ cmd_link_dev_config_rem_help[] = "link <dev> config rem";
 static const char
 cmd_link_dev_config_show_help[] = "link <dev> config show";
 
+static const char
+cmd_link_dev_config_set_promiscuous_help[] = "link <dev> config promiscuous <on#off>";
+
+static const char
+cmd_link_dev_config_set_mtu_help[] = "link <dev> config mtu <mtu>";
+
 static void
 cli_link_dev_config_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
@@ -54,7 +60,7 @@ cli_link_dev_config_add(void *parsed_result, struct cmdline *cl, __rte_unused vo
 	config.tx.queue_sz = ETHDEV_TX_DESC_DEFAULT;
 	rc = link_config_add(&config);
 	if (rc < 0) {
-                cmdline_printf(cl, "link %s config add failed: %s\n", res->dev, rte_strerror(-rc));
+                cmdline_printf(cl, "link %s config add failed: %s\n", config.link_name, rte_strerror(-rc));
 	}
 }
 
@@ -70,7 +76,7 @@ cli_link_dev_config_rem(void *parsed_result, struct cmdline *cl, __rte_unused vo
 
 	rc = link_config_rem(link_name);
 	if (rc < 0) {
-                cmdline_printf(cl, "link %s config rem failed: %s\n", res->dev, rte_strerror(-rc));
+                cmdline_printf(cl, "link %s config rem failed: %s\n", link_name, rte_strerror(-rc));
 	}
 }
 
@@ -79,15 +85,15 @@ cli_link_dev_config_show(void *parsed_result, struct cmdline *cl, __rte_unused v
 {
 	struct link_config_cmd_tokens *res = parsed_result;
 	char link_name[RTE_ETH_NAME_MAX_LEN];
-	struct link* l;
 	int rc = -ENOENT;
+	struct link* l;
 
 	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
 	link_name[strlen(res->dev)] = '\0';
 
 	l = link_config_get(link_name);
 	if (!l) {
-                cmdline_printf(cl, "link %s config show failed: %s\n", res->dev, rte_strerror(-rc));
+                cmdline_printf(cl, "link %s config show failed: %s\n", link_name, rte_strerror(-rc));
 	} else {
 		cmdline_printf(cl,
 			"%s: link_id=<%u> numa %d\n"
@@ -107,6 +113,42 @@ cli_link_dev_config_show(void *parsed_result, struct cmdline *cl, __rte_unused v
 	}
 }
 
+static void
+cli_link_dev_config_set_promiscuous(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct link_config_cmd_tokens *res = parsed_result;
+	char link_name[RTE_ETH_NAME_MAX_LEN];
+	bool enable = false;
+	int rc = -ENOENT;
+
+	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
+	link_name[strlen(res->dev)] = '\0';
+
+	if (!strcmp(res->promiscuous, "on"))
+		enable = true;
+
+	rc = link_config_set_promiscuous(link_name, enable);
+	if (rc < 0) {
+                cmdline_printf(cl, "link %s config promiscuous failed: %s\n", link_name, rte_strerror(-rc));
+	}
+}
+
+static void
+cli_link_dev_config_set_mtu(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct link_config_cmd_tokens *res = parsed_result;
+	char link_name[RTE_ETH_NAME_MAX_LEN];
+	int rc = -ENOENT;
+
+	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
+	link_name[strlen(res->dev)] = '\0';
+
+	rc = link_config_set_mtu(link_name, res->mtu);
+	if (rc < 0) {
+                cmdline_printf(cl, "link %s config mtu failed: %s\n", link_name, rte_strerror(-rc));
+	}
+}
+
 cmdline_parse_token_string_t link_dev_config_cmd =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, cmd, "link");
 cmdline_parse_token_string_t link_dev_config_dev =
@@ -119,6 +161,14 @@ cmdline_parse_token_string_t link_dev_config_rem =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "rem");
 cmdline_parse_token_string_t link_dev_config_show =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "show");
+cmdline_parse_token_string_t link_dev_config_set_promiscuous =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "promiscuous");
+cmdline_parse_token_string_t link_dev_config_promiscuous =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, promiscuous, "on#off");
+cmdline_parse_token_string_t link_dev_config_set_mtu =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "mtu");
+cmdline_parse_token_num_t link_dev_config_mtu =
+	TOKEN_NUM_INITIALIZER(struct link_config_cmd_tokens, mtu, RTE_UINT16);
 cmdline_parse_token_string_t link_dev_config_rxq =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, rxq, "rxq");
 cmdline_parse_token_num_t link_dev_config_nb_rxq =
@@ -173,6 +223,34 @@ cmdline_parse_inst_t link_dev_config_show_cmd_ctx = {
 		(void *)&link_dev_config_dev,
 		(void *)&link_dev_config_config,
 		(void *)&link_dev_config_show,
+		NULL,
+	},
+};
+
+cmdline_parse_inst_t link_dev_config_set_promiscuous_cmd_ctx = {
+	.f = cli_link_dev_config_set_promiscuous,
+	.data = NULL,
+	.help_str = cmd_link_dev_config_set_promiscuous_help,
+	.tokens = {
+		(void *)&link_dev_config_cmd,
+		(void *)&link_dev_config_dev,
+		(void *)&link_dev_config_config,
+		(void *)&link_dev_config_set_promiscuous,
+		(void *)&link_dev_config_promiscuous,
+		NULL,
+	},
+};
+
+cmdline_parse_inst_t link_dev_config_set_mtu_cmd_ctx = {
+	.f = cli_link_dev_config_set_mtu,
+	.data = NULL,
+	.help_str = cmd_link_dev_config_set_mtu_help,
+	.tokens = {
+		(void *)&link_dev_config_cmd,
+		(void *)&link_dev_config_dev,
+		(void *)&link_dev_config_config,
+		(void *)&link_dev_config_set_mtu,
+		(void *)&link_dev_config_mtu,
 		NULL,
 	},
 };

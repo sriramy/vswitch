@@ -52,4 +52,7 @@ struct link *link_config_get(char const *name);
 int link_config_add(struct link_config *l);
 int link_config_rem(char const *name);
 
+int link_config_set_promiscuous(const char *name, bool enable);
+int link_config_set_mtu(const char *name, uint32_t mtu);
+
 #endif /* __VSWITCH_SRC_API_LINK_H_ */

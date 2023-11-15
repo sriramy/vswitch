@@ -146,3 +146,42 @@ link_config_rem(char const *name)
 
         return -ENOENT;
 }
+
+int
+link_config_set_promiscuous(const char *name, bool enable)
+{
+	struct link *l = link_config_get(name);
+	uint16_t port_id = 0;
+	int rc = -EINVAL;
+
+        if (l) {
+		port_id = l->config.link_id;
+		rc = enable ?
+			rte_eth_promiscuous_enable(port_id) :
+			rte_eth_promiscuous_disable(port_id);
+		if (rc < 0)
+			return rc;
+
+		l->config.promiscuous = enable;
+	}
+
+	return rc;
+}
+
+int
+link_config_set_mtu(const char *name, uint32_t mtu)
+{
+	struct link *l = link_config_get(name);
+	uint16_t port_id = 0;
+	int rc = -EINVAL;
+
+        if (l) {
+		port_id = l->config.link_id;
+		rc = rte_eth_dev_set_mtu(port_id, mtu);
+		if (rc < 0)
+			return rc;
+		l->config.mtu = mtu;
+	}
+
+	return rc;
+}

@@ -55,7 +55,7 @@ cli_mempool_rem_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte
 	mp_name[strlen(res->name)] = '\0';
         mp = mempool_config_get(mp_name);
         if (!mp) {
-                cmdline_printf(cl, "%s\n", rte_strerror(-ENOENT));
+                cmdline_printf(cl, "%s\n", rte_strerror(ENOENT));
                 goto err;
         }
 
