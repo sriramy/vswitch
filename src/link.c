@@ -141,6 +141,7 @@ link_config_rem(char const *name)
         struct link *l = link_config_get(name);
         if (l) {
                 TAILQ_REMOVE(&link_node, l, next);
+		rte_free(l);
                 return 0;
         }
 

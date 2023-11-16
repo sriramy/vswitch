@@ -70,6 +70,8 @@ mempool_config_rem(char const *name)
         struct mempool *mp = mempool_config_get(name);
         if (mp) {
                 TAILQ_REMOVE(&mempool_node, mp, next);
+                rte_mempool_free(mp->mp);
+                rte_free(mp);
                 return 0;
         }
 
