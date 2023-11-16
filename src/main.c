@@ -19,8 +19,7 @@
 #include "log.h"
 #include "options.h"
 
-static volatile int force_quit = 0;
-
+static const char prompt[] = "vswitch> ";
 static struct params p = params_default;
 
 #define MAX_BACKTRACE   32
@@ -34,7 +33,7 @@ static void signal_handler(int sig)
 		fflush(stdout);
 		char c = getchar();
 		if (c == 'y' || c == 'Y') {
-			force_quit = true;
+			cli_quit();
 			return;
 		}
 
@@ -59,11 +58,13 @@ static void signal_handler(int sig)
 int main(int argc, char **argv)
 {
 	int ret;
-	struct cmdline *cl;
 
-	signal(SIGSEGV, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGTERM, signal_handler);
+	struct sigaction action = {
+		.sa_handler = signal_handler,
+	};
+	sigaction(SIGINT, &action, NULL);
+	sigaction(SIGTERM, &action, NULL);
+	sigaction(SIGSEGV, &action, NULL);
 
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
@@ -77,21 +78,21 @@ int main(int argc, char **argv)
 		goto error;
 	}
 
-	cl = cmdline_stdin_new(commands_ctx, "graph> ");
-	if (cl == NULL)
-		return -1;
+	ret = cli_init(prompt);
+	if (ret < 0) {
+		RTE_LOG(CRIT, USER1, "cli_init failed\n");
+		goto error;
+	}
 
 	rte_delay_ms(1);
 
 	/* Dispatch loop */
-	while (!force_quit) {
-		cmdline_interact(cl);
-	}
-
-	cmdline_stdin_exit(cl);
-	rte_eal_cleanup();
-	return 0;
+	cli_interact();
 
 error:
-	return -1;
+	if (!cli_stopped())
+		cli_quit();
+	rte_eal_cleanup();
+
+	return ret;
 }

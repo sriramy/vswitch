@@ -9,8 +9,13 @@
 #include <errno.h>
 #include <cmdline.h>
 #include <cmdline_parse.h>
+#include <cmdline_parse_string.h>
 
 extern cmdline_parse_ctx_t commands_ctx[];
+
+struct quit_cmd_tokens {
+	cmdline_fixed_string_t cmd;
+};
 
 /* Macros */
 #define MSG_CMD_UNKNOWN         "Unknown command \"%s\".\n"
@@ -22,5 +27,10 @@ extern cmdline_parse_ctx_t commands_ctx[];
 #define MSG_ARG_MISMATCH        "Wrong number of arguments for command \"%s\".\n"
 #define MSG_ARG_NOT_FOUND       "Argument \"%s\" not found.\n"
 #define MSG_ARG_INVALID         "Invalid value for argument \"%s\".\n"
+
+int cli_init(char const *prompt);
+void cli_interact();
+bool cli_stopped();
+void cli_quit();
 
 #endif /* __VSWITCH_SRC_CLI_CLI_H_ */
