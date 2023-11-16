@@ -11,4 +11,5 @@ sources += files(
         'cli.c',
         'cli_link.c',
         'cli_mempool.c',
+        'cli_stage.c',
 )

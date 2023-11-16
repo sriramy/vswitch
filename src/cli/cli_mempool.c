@@ -13,11 +13,11 @@
 #include "cli_mempool.h"
 #include "mempool.h"
 
-static const char
+static char const
 cmd_mempool_add_help[] = "mempool add <mp_name> [size <mbuf_sz>] [mbufs <nb_mbufs>] "
 		     "[cache <cache_sz>] [numa <node>]";
 
-static const char
+static char const
 cmd_mempool_rem_show_help[] = "mempool rem#show <mp_name>";
 
 

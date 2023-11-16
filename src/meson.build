@@ -11,6 +11,7 @@ sources = files(
         'link.c',
         'mempool.c',
         'options.c',
+        'stage.c',
         'main.c',
 )
 

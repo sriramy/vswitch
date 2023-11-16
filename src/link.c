@@ -149,7 +149,7 @@ link_config_rem(char const *name)
 }
 
 int
-link_config_set_promiscuous(const char *name, bool enable)
+link_config_set_promiscuous(char const *name, bool enable)
 {
 	struct link *l = link_config_get(name);
 	uint16_t port_id = 0;
@@ -170,7 +170,7 @@ link_config_set_promiscuous(const char *name, bool enable)
 }
 
 int
-link_config_set_mtu(const char *name, uint32_t mtu)
+link_config_set_mtu(char const *name, uint32_t mtu)
 {
 	struct link *l = link_config_get(name);
 	uint16_t port_id = 0;

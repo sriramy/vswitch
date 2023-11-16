@@ -19,25 +19,25 @@
 #include "cli_link.h"
 #include "link.h"
 
-static const char
+static char const
 cmd_link_show_help[] = "link show";
 
-static const char
+static char const
 cmd_link_dev_show_help[] = "link <dev> show";
 
-static const char
+static char const
 cmd_link_dev_config_add_help[] = "link <dev> config add rxq <nb_rxq> txq <nb_txq> mempool <mp_name>";
 
-static const char
+static char const
 cmd_link_dev_config_rem_help[] = "link <dev> config rem";
 
-static const char
+static char const
 cmd_link_dev_config_show_help[] = "link <dev> config show";
 
-static const char
+static char const
 cmd_link_dev_config_set_promiscuous_help[] = "link <dev> config promiscuous <on#off>";
 
-static const char
+static char const
 cmd_link_dev_config_set_mtu_help[] = "link <dev> config mtu <mtu>";
 
 static void

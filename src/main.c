@@ -19,7 +19,7 @@
 #include "log.h"
 #include "options.h"
 
-static const char prompt[] = "vswitch> ";
+static char const prompt[] = "vswitch> ";
 static struct params p = params_default;
 
 #define MAX_BACKTRACE   32

@@ -11,7 +11,7 @@
 
 #include "options.h"
 
-static const char usage[] = 
+static char const usage[] = 
 	"%s EAL_ARGS --"
 	" -f CONFIG_FILE"
         " --enable-graph-stats"

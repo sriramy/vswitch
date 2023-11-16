@@ -17,12 +17,13 @@
 #include "cli.h"
 #include "cli_link.h"
 #include "cli_mempool.h"
+#include "cli_stage.h"
 
 static struct cmdline *cl;
 
 static volatile bool stopped = false;
 
-static const char
+static char const
 cmd_quit_help[] = "quit";
 
 static void
@@ -57,6 +58,10 @@ cmdline_parse_ctx_t commands_ctx[] = {
 
 	(cmdline_parse_inst_t *)&mempool_add_cmd_ctx,
 	(cmdline_parse_inst_t *)&mempool_rem_show_cmd_ctx,
+
+	(cmdline_parse_inst_t *)&stage_add_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_rem_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_show_cmd_ctx,
 	NULL,
 };
 
