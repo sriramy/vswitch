@@ -11,9 +11,18 @@
 ##
 
 LIBDPDK_SRC=dpdk/*
-VSWITCH_SRC=src/*
+VSWITCH_SRC_DIR=src
+CMDLINE_GEN=dpdk/buildtools/dpdk-cmdline-gen.py
+CMD_LISTS := $(wildcard $(VSWITCH_SRC_DIR)/cli/*.list)
+CMD_GEN_H := $(CMD_LISTS:%.list=%.h)
 
 all: vswitch
+
+$(VSWITCH_SRC_DIR)/cli/%.h: $(VSWITCH_SRC_DIR)/cli/%.list
+	$(CMDLINE_GEN)  --output-file $@ --stubs $<
+
+.PHONY: stubs
+stubs: $(CMD_GEN_H)
 
 .PHONY: libdpdk
 libdpdk: $(LIBDPDK_SRC)
@@ -31,7 +40,7 @@ libdpdk_install:
 	$(Q)meson install -C dpdk/build $(P)
 
 .PHONY: vswitch
-vswitch: $(VSWITCH_SRC)
+vswitch: $(VSWITCH_SRC_DIR)/*
 	@echo "  vswitch"
 	$(Q)meson setup build --buildtype debug $(P)
 	$(Q)meson configure build $(P)

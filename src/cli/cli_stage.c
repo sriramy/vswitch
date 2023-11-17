@@ -17,7 +17,7 @@
 #include "stage.h"
 
 static char const
-cmd_stage_add_help[] = "stage add <stage_name> [id <stage_id>]";
+cmd_stage_add_help[] = "stage add <stage_name> [coremask <mask>]";
 
 static char const
 cmd_stage_rem_help[] = "stage rem <stage_name>";
@@ -28,12 +28,13 @@ cmd_stage_show_help[] = "stage show <stage_name>";
 static void
 cli_stage_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
 {
-	struct stage_config_cmd_tokens *res = parsed_result;
+	struct stage_cmd_tokens *res = parsed_result;
         struct stage_config config;
 	int rc;
 
 	rte_strscpy(config.name, res->name, STAGE_NAME_MAX_LEN);
 	config.name[strlen(res->name)] = '\0';
+	config.coremask = res->mask;
 
 	rc = stage_config_add(&config);
 	if (rc < 0) {
@@ -44,7 +45,7 @@ cli_stage_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused
 static void
 cli_stage_rem(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
 {
-	struct stage_config_cmd_tokens *res = parsed_result;
+	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
         int rc = -EINVAL;
 
@@ -59,7 +60,7 @@ cli_stage_rem(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused
 static void
 cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
 {
-	struct stage_config_cmd_tokens *res = parsed_result;
+	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
         unsigned int lcore_id;
         struct stage *stage;
@@ -73,8 +74,9 @@ cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unuse
                 cmdline_printf(cl, "stage show %s failed: %s\n", stage_name, rte_strerror(-rc));
         } else {
                 cmdline_printf(cl,
-                        "%s: stage_id=%d\n",
-                        stage->config.name, stage->config.stage_id);
+                        "%s: stage_id=%d coremask:0x%04x\n",
+                        stage->config.name, stage->config.stage_id,
+			stage->config.coremask);
                 cmdline_printf(cl, "Available lcores: \n");
                 RTE_LCORE_FOREACH_WORKER(lcore_id) {
                         cmdline_printf(cl, "\t%d", lcore_id);
@@ -84,15 +86,19 @@ cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unuse
 }
 
 cmdline_parse_token_string_t stage_cmd =
-	TOKEN_STRING_INITIALIZER(struct stage_config_cmd_tokens, stage, "stage");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, stage, "stage");
 cmdline_parse_token_string_t stage_add =
-	TOKEN_STRING_INITIALIZER(struct stage_config_cmd_tokens, action, "add");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, action, "add");
 cmdline_parse_token_string_t stage_rem =
-	TOKEN_STRING_INITIALIZER(struct stage_config_cmd_tokens, action, "rem");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, action, "rem");
 cmdline_parse_token_string_t stage_show =
-	TOKEN_STRING_INITIALIZER(struct stage_config_cmd_tokens, action, "show");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, action, "show");
 cmdline_parse_token_string_t stage_name =
-	TOKEN_STRING_INITIALIZER(struct stage_config_cmd_tokens, name, NULL);
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, name, NULL);
+cmdline_parse_token_string_t stage_coremask =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, coremask, "coremask");
+cmdline_parse_token_num_t stage_mask =
+	TOKEN_NUM_INITIALIZER(struct stage_cmd_tokens, mask, RTE_UINT32);
 
 cmdline_parse_inst_t stage_add_cmd_ctx = {
 	.f = cli_stage_add,
@@ -102,6 +108,8 @@ cmdline_parse_inst_t stage_add_cmd_ctx = {
 		(void *)&stage_cmd,
                 (void *)&stage_add,
 		(void *)&stage_name,
+		(void *)&stage_coremask,
+		(void *)&stage_mask,
 		NULL,
 	},
 };

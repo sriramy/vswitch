@@ -18,6 +18,7 @@
 #include "cli/cli.h"
 #include "log.h"
 #include "options.h"
+#include "stage.h"
 
 static char const prompt[] = "vswitch> ";
 static struct params p = params_default;
@@ -84,12 +85,15 @@ int main(int argc, char **argv)
 		goto error;
 	}
 
+	stage_init();
+
 	rte_delay_ms(1);
 
 	/* Dispatch loop */
 	cli_interact();
 
 error:
+	stage_uninit();
 	if (!cli_stopped())
 		cli_quit();
 	rte_eal_cleanup();
