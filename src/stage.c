@@ -183,7 +183,16 @@ int
 stage_config_rem(char const *name)
 {
         struct stage *s = stage_config_get(name);
+	uint16_t i;
+
         if (s) {
+		for (i = 0; i < RTE_MAX_LCORE; i++) {
+			if (!(s->config.coremask & (1UL << i))) {
+				continue;
+			}
+			rte_bitmap_clear(used_cores, i);
+		}
+
                 TAILQ_REMOVE(&stage_node, s, next);
 		stage_array[s->config.stage_id] = NULL;
 		rte_free(s);
