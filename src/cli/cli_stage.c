@@ -62,7 +62,6 @@ cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unuse
 {
 	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
-        unsigned int lcore_id;
         struct stage *stage;
 	int rc = -ENOENT;
 
@@ -77,11 +76,8 @@ cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unuse
                         "%s: stage_id=%d coremask:0x%04x\n",
                         stage->config.name, stage->config.stage_id,
 			stage->config.coremask);
-                cmdline_printf(cl, "Available lcores: \n");
-                RTE_LCORE_FOREACH_WORKER(lcore_id) {
-                        cmdline_printf(cl, "\t%d", lcore_id);
-                }
-                cmdline_printf(cl, "\n");
+                cmdline_printf(cl, "enabled_coremask: 0x%04lx\n",
+			stage_get_enabled_coremask());
         }
 }
 

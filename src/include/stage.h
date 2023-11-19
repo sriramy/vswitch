@@ -28,6 +28,7 @@ TAILQ_HEAD(stage_head, stage);
 
 void stage_init();
 void stage_uninit();
+uint64_t stage_get_enabled_coremask();
 
 struct stage* stage_config_get(char const *name);
 int stage_config_add(struct stage_config *config);

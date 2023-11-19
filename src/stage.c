@@ -13,6 +13,8 @@
 
 #include "stage.h"
 
+static uint64_t enabled_coremask = 0;
+
 static void *enabled_cores_bitmap = NULL;
 static struct rte_bitmap *enabled_cores = NULL;
 
@@ -59,6 +61,7 @@ stage_init()
 	}
 
 	RTE_LCORE_FOREACH_WORKER(core_id) {
+		enabled_coremask |= (1UL << core_id);
 		rte_bitmap_set(enabled_cores, core_id);
 	}
 
@@ -82,6 +85,12 @@ stage_uninit()
 		rte_free(enabled_cores_bitmap);
 	if (used_cores_bitmap)
 		rte_free(used_cores_bitmap);
+}
+
+uint64_t
+stage_get_enabled_coremask()
+{
+	return enabled_coremask;
 }
 
 static int16_t 
@@ -137,6 +146,9 @@ stage_config_add(struct stage_config *config)
 
 	mask = s->config.coremask;
 	for (i = 0; i < RTE_MAX_LCORE && mask; i++) {
+		if (!(mask & 1UL)) {
+			continue;
+		}
 		if (!rte_bitmap_get(enabled_cores, i)) {
 			rc = -EINVAL;
 			goto err;
@@ -150,6 +162,9 @@ stage_config_add(struct stage_config *config)
 
 	mask = s->config.coremask;
 	for (i = 0; i < RTE_MAX_LCORE && mask; i++) {
+		if (!(mask & 1UL)) {
+			continue;
+		}
 		rte_bitmap_set(used_cores, i);
 		mask = mask >> 1;
 	}
