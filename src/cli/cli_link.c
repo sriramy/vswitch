@@ -40,6 +40,9 @@ cmd_link_dev_config_set_promiscuous_help[] = "link <dev> config promiscuous <on#
 static char const
 cmd_link_dev_config_set_mtu_help[] = "link <dev> config mtu <mtu>";
 
+static char const
+cmd_link_dev_config_set_peer_help[] = "link <dev> config peer <ifname>";
+
 static void
 cli_link_dev_config_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
@@ -99,7 +102,8 @@ cli_link_dev_config_show(void *parsed_result, struct cmdline *cl, __rte_unused v
 			"%s: link_id=<%u> numa %d\n"
 			"\t rxq %u size %d mempool %s\n"
 			"\t txq %u size %d\n"
-			"\t promiscuous %d mtu %u\n",
+			"\t promiscuous %d mtu %u\n"
+			"\t peer %s link_id=<%u>\n",
 			l->config.link_name,
 			l->config.link_id,
 			l->config.numa_node,
@@ -109,7 +113,9 @@ cli_link_dev_config_show(void *parsed_result, struct cmdline *cl, __rte_unused v
 			l->config.tx.nb_queues,
 			l->config.tx.queue_sz,
 			l->config.promiscuous,
-			l->config.mtu);
+			l->config.mtu,
+			l->config.peer.link_name,
+			l->config.peer.link_id);
 	}
 }
 
@@ -149,6 +155,22 @@ cli_link_dev_config_set_mtu(void *parsed_result, struct cmdline *cl, __rte_unuse
 	}
 }
 
+static void
+cli_link_dev_config_set_peer(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct link_config_cmd_tokens *res = parsed_result;
+	char link_name[RTE_ETH_NAME_MAX_LEN];
+	int rc = -ENOENT;
+
+	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
+	link_name[strlen(res->dev)] = '\0';
+
+	rc = link_config_set_peer(link_name, res->peer);
+	if (rc < 0) {
+                cmdline_printf(cl, "link %s config peer failed: %s\n", link_name, rte_strerror(-rc));
+	}
+}
+
 cmdline_parse_token_string_t link_dev_config_cmd =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, cmd, "link");
 cmdline_parse_token_string_t link_dev_config_dev =
@@ -169,6 +191,10 @@ cmdline_parse_token_string_t link_dev_config_set_mtu =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "mtu");
 cmdline_parse_token_num_t link_dev_config_mtu =
 	TOKEN_NUM_INITIALIZER(struct link_config_cmd_tokens, mtu, RTE_UINT16);
+cmdline_parse_token_string_t link_dev_config_set_peer =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, action, "peer");
+cmdline_parse_token_string_t link_dev_config_peer =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, peer, NULL);
 cmdline_parse_token_string_t link_dev_config_rxq =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, rxq, "rxq");
 cmdline_parse_token_num_t link_dev_config_nb_rxq =
@@ -251,6 +277,20 @@ cmdline_parse_inst_t link_dev_config_set_mtu_cmd_ctx = {
 		(void *)&link_dev_config_config,
 		(void *)&link_dev_config_set_mtu,
 		(void *)&link_dev_config_mtu,
+		NULL,
+	},
+};
+
+cmdline_parse_inst_t link_dev_config_set_peer_cmd_ctx = {
+	.f = cli_link_dev_config_set_peer,
+	.data = NULL,
+	.help_str = cmd_link_dev_config_set_peer_help,
+	.tokens = {
+		(void *)&link_dev_config_cmd,
+		(void *)&link_dev_config_dev,
+		(void *)&link_dev_config_config,
+		(void *)&link_dev_config_set_peer,
+		(void *)&link_dev_config_peer,
 		NULL,
 	},
 };

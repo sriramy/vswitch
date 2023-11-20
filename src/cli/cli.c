@@ -56,6 +56,7 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&link_dev_config_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&link_dev_config_set_promiscuous_cmd_ctx,
 	(cmdline_parse_inst_t *)&link_dev_config_set_mtu_cmd_ctx,
+	(cmdline_parse_inst_t *)&link_dev_config_set_peer_cmd_ctx,
 
 	(cmdline_parse_inst_t *)&mempool_add_cmd_ctx,
 	(cmdline_parse_inst_t *)&mempool_rem_show_cmd_ctx,

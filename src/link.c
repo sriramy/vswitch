@@ -76,6 +76,8 @@ link_config_add(struct link_config *config)
         }
 
 	memcpy(&link_conf, link_config_default_get(), sizeof(struct rte_eth_conf));
+	config->peer.link_name[0] = '\0';
+	config->peer.link_id = LINK_ID_MAX;
 	config->mtu = link_conf.rxmode.mtu;
 	config->rx.mp = rte_mempool_lookup(config->rx.mp_name);
 	if (!config->rx.mp) {
@@ -183,6 +185,33 @@ link_config_set_mtu(char const *name, uint32_t mtu)
 		if (rc < 0)
 			return rc;
 		l->config.mtu = mtu;
+	}
+
+	return rc;
+}
+
+int
+link_config_set_peer(char const *name, char const *peer_name)
+{
+	struct link *peer = link_config_get(peer_name);
+	struct link *l = link_config_get(name);
+	int rc = -ENOENT;
+
+        if (l && peer) {
+		if (l->config.peer.link_id == LINK_ID_MAX) {
+			strncpy(l->config.peer.link_name, peer->config.link_name, RTE_ETH_NAME_MAX_LEN);
+			l->config.peer.link_id = peer->config.link_id;
+		} else {
+			rc = -EINVAL;
+		}
+		if (peer->config.peer.link_id == LINK_ID_MAX) {
+			strncpy(peer->config.peer.link_name, l->config.link_name, RTE_ETH_NAME_MAX_LEN);
+			peer->config.peer.link_id = l->config.link_id;
+		} else {
+			rc = -EINVAL;
+		}
+
+		return 0;
 	}
 
 	return rc;

@@ -9,9 +9,10 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 
-#define ETHDEV_RXQ_RSS_MAX	16
-#define ETHDEV_RX_DESC_DEFAULT 1024
-#define ETHDEV_TX_DESC_DEFAULT 1024
+#define LINK_ID_MAX 		(0xFFFF)
+#define ETHDEV_RXQ_RSS_MAX	(16)
+#define ETHDEV_RX_DESC_DEFAULT	(1024)
+#define ETHDEV_TX_DESC_DEFAULT	(1024)
 
 struct link_rss_config {
 	uint32_t queue_id[ETHDEV_RXQ_RSS_MAX];
@@ -36,6 +37,11 @@ struct link_config {
 		uint32_t queue_sz;
 	} tx;
 
+	struct {
+		char link_name[RTE_ETH_NAME_MAX_LEN];
+		uint16_t link_id;
+	} peer;
+
 	int promiscuous;
 	uint32_t mtu;
 };
@@ -54,5 +60,6 @@ int link_config_rem(char const *name);
 
 int link_config_set_promiscuous(char const *name, bool enable);
 int link_config_set_mtu(char const *name, uint32_t mtu);
+int link_config_set_peer(char const *name, char const *peer_name);
 
 #endif /* __VSWITCH_SRC_API_LINK_H_ */
