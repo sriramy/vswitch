@@ -26,7 +26,7 @@ static char const
 cmd_stage_show_help[] = "stage show <stage_name>";
 
 static void
-cli_stage_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
+cli_stage_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
         struct stage_config config;
@@ -43,7 +43,7 @@ cli_stage_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused
 }
 
 static void
-cli_stage_rem(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
+cli_stage_rem(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
@@ -58,7 +58,7 @@ cli_stage_rem(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused
 }
 
 static void
-cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
+cli_stage_show(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
@@ -76,8 +76,6 @@ cli_stage_show(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unuse
                         "%s: stage_id=%d coremask:0x%04x\n",
                         stage->config.name, stage->config.stage_id,
 			stage->config.coremask);
-                cmdline_printf(cl, "enabled_coremask: 0x%04lx\n",
-			stage_get_enabled_coremask());
         }
 }
 

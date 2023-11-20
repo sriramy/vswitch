@@ -39,8 +39,7 @@ mempool_config_add(struct mempool_config *config)
                         goto err;
                 }
 	} else {
-                rc = -EEXIST;
-		goto err;
+                return -EEXIST;
         }
 
 	memcpy(&mp->config, config, sizeof(*config));
@@ -61,6 +60,8 @@ mempool_config_add(struct mempool_config *config)
         return 0;
 
 err:
+        if (mp)
+                rte_free(mp);
         return rc;
 }
 

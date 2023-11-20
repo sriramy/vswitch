@@ -18,6 +18,7 @@
 #include "cli_link.h"
 #include "cli_mempool.h"
 #include "cli_stage.h"
+#include "cli_vswitch.h"
 
 static struct cmdline *cl;
 
@@ -62,6 +63,9 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&stage_add_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_rem_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_show_cmd_ctx,
+
+	(cmdline_parse_inst_t *)&vswitch_show_cmd_ctx,
+
 	NULL,
 };
 

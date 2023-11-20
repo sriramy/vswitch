@@ -13,8 +13,6 @@
 
 #include "stage.h"
 
-static uint64_t enabled_coremask = 0;
-
 static void *enabled_cores_bitmap = NULL;
 static struct rte_bitmap *enabled_cores = NULL;
 
@@ -61,7 +59,6 @@ stage_init()
 	}
 
 	RTE_LCORE_FOREACH_WORKER(core_id) {
-		enabled_coremask |= (1UL << core_id);
 		rte_bitmap_set(enabled_cores, core_id);
 	}
 
@@ -90,7 +87,27 @@ stage_uninit()
 uint64_t
 stage_get_enabled_coremask()
 {
+	uint16_t core_id;
+	uint64_t enabled_coremask = 0;
+	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+		if (rte_bitmap_get(enabled_cores, core_id))
+			enabled_coremask |= (1UL << core_id);
+	}
+
 	return enabled_coremask;
+}
+
+uint64_t
+stage_get_used_coremask()
+{
+	uint16_t core_id;
+	uint64_t used_coremask = 0;
+	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+		if (rte_bitmap_get(used_cores, core_id))
+			used_coremask |= (1UL << core_id);
+	}
+
+	return used_coremask;
 }
 
 static int16_t 
@@ -123,7 +140,7 @@ stage_config_add(struct stage_config *config)
 {
 	int rc = -EINVAL;
 	struct stage* s;
-	uint16_t mask, i;
+	uint16_t core_id;
 
 	s = stage_config_get(config->name);
 	if (!s) {
@@ -133,8 +150,7 @@ stage_config_add(struct stage_config *config)
                         goto err;
                 }
 	} else {
-                rc = -EEXIST;
-		goto err;
+		return -EEXIST;
         }
 
 	memcpy(&s->config, config, sizeof(*config));
@@ -144,29 +160,23 @@ stage_config_add(struct stage_config *config)
 		goto err;
 	}
 
-	mask = s->config.coremask;
-	for (i = 0; i < RTE_MAX_LCORE && mask; i++) {
-		if (!(mask & 1UL)) {
-			continue;
+	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+		if (s->config.coremask & (1UL << core_id)) {
+			if (!rte_bitmap_get(enabled_cores, core_id)) {
+				rc = -EINVAL;
+				goto err;
+			}
+			if (rte_bitmap_get(used_cores, core_id)) {
+				rc = -EEXIST;
+				goto err;
+			}
 		}
-		if (!rte_bitmap_get(enabled_cores, i)) {
-			rc = -EINVAL;
-			goto err;
-		}
-		if (rte_bitmap_get(used_cores, i)) {
-			rc = -EEXIST;
-			goto err;
-		}
-		mask = mask >> 1;
 	}
 
-	mask = s->config.coremask;
-	for (i = 0; i < RTE_MAX_LCORE && mask; i++) {
-		if (!(mask & 1UL)) {
-			continue;
+	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+		if (s->config.coremask & (1UL << core_id)) {
+			rte_bitmap_set(used_cores, core_id);
 		}
-		rte_bitmap_set(used_cores, i);
-		mask = mask >> 1;
 	}
 
 	stage_array[s->config.stage_id] = s;
@@ -183,14 +193,13 @@ int
 stage_config_rem(char const *name)
 {
         struct stage *s = stage_config_get(name);
-	uint16_t i;
+	uint16_t core_id;
 
         if (s) {
-		for (i = 0; i < RTE_MAX_LCORE; i++) {
-			if (!(s->config.coremask & (1UL << i))) {
-				continue;
+		for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+			if (s->config.coremask & (1UL << core_id)) {
+				rte_bitmap_clear(used_cores, core_id);
 			}
-			rte_bitmap_clear(used_cores, i);
 		}
 
                 TAILQ_REMOVE(&stage_node, s, next);

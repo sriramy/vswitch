@@ -72,8 +72,7 @@ link_config_add(struct link_config *config)
                         goto err;
                 }
 	} else {
-                rc = -EEXIST;
-		goto err;
+		return -EEXIST;
         }
 
 	memcpy(&link_conf, link_config_default_get(), sizeof(struct rte_eth_conf));
@@ -132,6 +131,8 @@ link_config_add(struct link_config *config)
         return 0;
 
 err:
+	if (l)
+		rte_free(l);
         return rc;
 }
 
