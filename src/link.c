@@ -216,3 +216,35 @@ link_config_set_peer(char const *name, char const *peer_name)
 
 	return rc;
 }
+
+int
+link_start()
+{
+	struct link *l;
+	int rc = 0;
+
+	TAILQ_FOREACH(l, &link_node, next) {
+		rc = rte_eth_dev_start(l->config.link_id);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
+	return rc;
+}
+
+int
+link_iterate(link_iter_cb cb)
+{
+	struct link *l;
+	int rc = 0;
+
+	TAILQ_FOREACH(l, &link_node, next) {
+		rc = cb(l->config.link_id, l->config.peer.link_id);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
+	return rc;
+}

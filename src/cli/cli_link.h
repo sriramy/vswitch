@@ -25,6 +25,8 @@ struct link_config_cmd_tokens {
 	cmdline_fixed_string_t txq;
 	cmdline_fixed_string_t mempool;
 	cmdline_fixed_string_t mp_name;
+	cmdline_fixed_string_t stage;
+	cmdline_fixed_string_t stage_name;
 	cmdline_fixed_string_t peer;
 	uint16_t mtu;
 	uint16_t nb_rxq;

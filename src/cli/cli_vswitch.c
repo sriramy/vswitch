@@ -14,10 +14,15 @@
 
 #include "cli.h"
 #include "cli_vswitch.h"
+#include "link.h"
 #include "stage.h"
+#include "vswitch.h"
 
 static char const
 cmd_vswitch_show_help[] = "vswitch show";
+
+static char const
+cmd_vswitch_start_help[] = "vswitch start";
 
 static void
 cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
@@ -28,10 +33,21 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
                 stage_get_used_coremask());
 }
 
+static void
+cli_vswitch_start(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+        cmdline_printf(cl, "Starting links...\n");
+        link_start();
+        vswitch_start();
+        cmdline_printf(cl, "Done.\n");
+}
+
 cmdline_parse_token_string_t vswitch_cmd =
 	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, cmd, "vswitch");
-cmdline_parse_token_string_t vswitch_show =
+cmdline_parse_token_string_t vswitch_action_show =
 	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, action, "show");
+cmdline_parse_token_string_t vswitch_action_start =
+	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, action, "start");
 
 cmdline_parse_inst_t vswitch_show_cmd_ctx = {
 	.f = cli_vswitch_show,
@@ -39,7 +55,18 @@ cmdline_parse_inst_t vswitch_show_cmd_ctx = {
 	.help_str = cmd_vswitch_show_help,
 	.tokens = {
 		(void *)&vswitch_cmd,
-                (void *)&vswitch_show,
+                (void *)&vswitch_action_show,
+		NULL,
+	},
+};
+
+cmdline_parse_inst_t vswitch_start_cmd_ctx = {
+	.f = cli_vswitch_start,
+	.data = NULL,
+	.help_str = cmd_vswitch_start_help,
+	.tokens = {
+		(void *)&vswitch_cmd,
+                (void *)&vswitch_action_start,
 		NULL,
 	},
 };

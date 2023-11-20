@@ -13,6 +13,7 @@ sources = files(
         'options.c',
         'stage.c',
         'main.c',
+        'vswitch.c',
 )
 
 subdir('cli')

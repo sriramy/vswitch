@@ -92,6 +92,8 @@ int main(int argc, char **argv)
 	/* Dispatch loop */
 	cli_interact();
 
+	rte_eal_mp_wait_lcore();
+
 error:
 	stage_uninit();
 	if (!cli_stopped())

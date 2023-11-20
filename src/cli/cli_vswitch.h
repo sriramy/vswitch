@@ -16,5 +16,6 @@ struct vswitch_cmd_tokens {
 };
 
 extern cmdline_parse_inst_t vswitch_show_cmd_ctx;
+extern cmdline_parse_inst_t vswitch_start_cmd_ctx;
 
 #endif /* __VSWITCH_SRC_CLI_VSWITCH_H_*/

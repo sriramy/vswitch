@@ -207,6 +207,10 @@ cmdline_parse_token_string_t link_dev_config_mempool =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, mempool, "mempool");
 cmdline_parse_token_string_t link_dev_config_mp_name =
 	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, mp_name, NULL);
+cmdline_parse_token_string_t link_dev_config_stage =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, stage, "stage");
+cmdline_parse_token_string_t link_dev_config_stage_name =
+	TOKEN_STRING_INITIALIZER(struct link_config_cmd_tokens, stage_name, NULL);
 
 cmdline_parse_inst_t link_dev_config_add_cmd_ctx = {
 	.f = cli_link_dev_config_add,
@@ -223,6 +227,8 @@ cmdline_parse_inst_t link_dev_config_add_cmd_ctx = {
 		(void *)&link_dev_config_nb_txq,
 		(void *)&link_dev_config_mempool,
 		(void *)&link_dev_config_mp_name,
+		(void *)&link_dev_config_stage,
+		(void *)&link_dev_config_stage_name,
 		NULL,
 	},
 };
