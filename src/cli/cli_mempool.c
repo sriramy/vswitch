@@ -25,14 +25,11 @@ static void
 cli_mempool_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
 {
 	struct mempool_config_cmd_tokens *res = parsed_result;
-        char mp_name[RTE_MEMPOOL_NAMESIZE];
-        struct mempool_config config;
+	struct mempool_config config;
 	int rc;
 
-	rte_strscpy(mp_name, res->name, RTE_MEMPOOL_NAMESIZE);
-	mp_name[strlen(res->name)] = '\0';
-
-        strncpy(config.name, mp_name, strlen(mp_name));
+	rte_strscpy(config.name, res->name, RTE_MEMPOOL_NAMESIZE);
+	config.name[strlen(res->name)] = '\0';
 	config.mbuf_sz = res->mbuf_sz;
 	config.nb_mbufs = res->nb_mbufs;
 	config.cache_sz = res->cache_sz;
@@ -40,7 +37,7 @@ cli_mempool_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unus
 
 	rc = mempool_config_add(&config);
 	if (rc < 0) {
-                cmdline_printf(cl, "mempool add %s failed: %s\n", mp_name, rte_strerror(rte_errno));
+                cmdline_printf(cl, "mempool add %s failed: %s\n", config.name, rte_strerror(rte_errno));
         }
 }
 

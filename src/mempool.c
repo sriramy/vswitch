@@ -51,8 +51,7 @@ mempool_config_add(struct mempool_config *config)
                 mp->config.mbuf_sz,
                 mp->config.numa_node);
 	if (!mp->mp) {
-                rte_free(mp);
-                rc = -ENOMEM;
+                rc = -rte_errno;
                 goto err;
         }
 
@@ -60,8 +59,11 @@ mempool_config_add(struct mempool_config *config)
         return 0;
 
 err:
-        if (mp)
+        if (mp) {
+                if (mp->mp)
+                        rte_mempool_free(mp->mp);
                 rte_free(mp);
+        }
         return rc;
 }
 
@@ -71,7 +73,8 @@ mempool_config_rem(char const *name)
         struct mempool *mp = mempool_config_get(name);
         if (mp) {
                 TAILQ_REMOVE(&mempool_node, mp, next);
-                rte_mempool_free(mp->mp);
+                if (mp->mp)
+                        rte_mempool_free(mp->mp);
                 rte_free(mp);
                 return 0;
         }
