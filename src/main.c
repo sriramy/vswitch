@@ -11,6 +11,7 @@
 #include <rte_cycles.h>
 #include <rte_debug.h>
 #include <rte_eal.h>
+#include <rte_errno.h>
 #include <rte_log.h>
 #include <cmdline.h>
 #include <cmdline_socket.h>
@@ -88,6 +89,11 @@ int main(int argc, char **argv)
 	stage_init();
 
 	rte_delay_ms(1);
+
+	ret = cli_execute(p.config);
+	if (ret < 0)
+		RTE_LOG(CRIT, USER1, "cli_execute failed (%s)\n",
+			rte_strerror(-ret));
 
 	/* Dispatch loop */
 	cli_interact();

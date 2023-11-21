@@ -15,7 +15,7 @@ struct params {
 };
 
 static const struct params params_default = {
-	.config = "/etc/vswitch/init.cli",
+	.config = "/etc/vswitch/xcluster.cli",
 	.enable_graph_stats = true,
 };
 

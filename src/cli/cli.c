@@ -3,6 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <linux/if.h>
 
@@ -71,6 +73,17 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	NULL,
 };
 
+static int
+is_comment(char *in)
+{
+	if ((strlen(in) && index("!#%;", in[0])) ||
+		(strncmp(in, "//", 2) == 0) ||
+		(strncmp(in, "--", 2) == 0))
+		return 1;
+
+	return 0;
+}
+
 int
 cli_init(char const *prompt)
 {
@@ -99,4 +112,36 @@ cli_quit()
 {
 	stopped = true;
 	cmdline_stdin_exit(cl);
+}
+
+int
+cli_execute(const char *file_name)
+{
+	FILE *fp;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int rc;
+
+	fp = fopen(file_name, "r");
+	if (fp == NULL)
+		return -ENOENT;
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+		if (is_comment(line))
+			continue;
+
+		rc = cmdline_parse(cl, line);
+		if (rc == CMDLINE_PARSE_AMBIGUOUS)
+			cmdline_printf(cl, "Ambiguous command\n");
+		else if (rc == CMDLINE_PARSE_NOMATCH)
+			cmdline_printf(cl, "Command not found\n");
+		else if (rc == CMDLINE_PARSE_BAD_ARGS)
+			cmdline_printf(cl, "Bad arguments\n");
+	}
+
+	fclose(fp);
+	if (line)
+		free(line);
+	return 0;
 }
