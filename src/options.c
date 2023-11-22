@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "options.h"
@@ -14,6 +15,8 @@
 static char const usage[] = 
 	"%s EAL_ARGS --"
 	" -f CONFIG_FILE"
+	" -H host"
+	" -P port"
         " --enable-graph-stats"
 	" --help\n";
 
@@ -33,6 +36,12 @@ int options_parse(struct params *p, int argc, char **argv)
 		{
 		case 'f':
 			p->config = strdup(optarg);
+			break;
+		case 'H':
+			p->host = strdup(optarg);
+			break;
+		case 'P':
+			p->port = (uint16_t)atoi(optarg);
 			break;
 		case 'g':
 			p->enable_graph_stats = true;

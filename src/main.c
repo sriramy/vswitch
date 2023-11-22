@@ -17,6 +17,7 @@
 #include <cmdline_socket.h>
 
 #include "cli/cli.h"
+#include "conn.h"
 #include "log.h"
 #include "options.h"
 #include "stage.h"
@@ -59,6 +60,7 @@ static void signal_handler(int sig)
 
 int main(int argc, char **argv)
 {
+	struct conn_config config;
 	int ret;
 
 	struct sigaction action = {
@@ -95,8 +97,18 @@ int main(int argc, char **argv)
 		RTE_LOG(CRIT, USER1, "cli_execute failed (%s)\n",
 			rte_strerror(-ret));
 
-	/* Dispatch loop */
-	cli_interact();
+	config.welcome = "Welcome to vswitch 0.1.0\n";
+	config.prompt = prompt;
+	config.addr = strdup(p.host);
+	config.port = p.port;
+	ret = conn_init(&config);
+	while (1) {
+		conn_interact();
+		rte_delay_ms(10);
+	}
+
+	// /* Dispatch loop */
+	// cli_interact();
 
 	rte_eal_mp_wait_lcore();
 
@@ -104,6 +116,7 @@ error:
 	stage_uninit();
 	if (!cli_stopped())
 		cli_quit();
+	conn_free();
 	rte_eal_cleanup();
 
 	return ret;

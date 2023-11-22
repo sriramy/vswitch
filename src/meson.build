@@ -8,6 +8,7 @@ if not build
 endif
 
 sources = files(
+        'conn.c',
         'link.c',
         'mempool.c',
         'options.c',
