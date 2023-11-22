@@ -24,33 +24,7 @@
 
 static struct cmdline *cl;
 
-static volatile bool stopped = false;
-
-static char const
-cmd_quit_help[] = "quit";
-
-static void
-cli_quit_cmd(__rte_unused void *parsed_result, __rte_unused struct cmdline *cl, __rte_unused void *data)
-{
-	cli_quit();
-}
-
-cmdline_parse_token_string_t quit_cmd =
-	TOKEN_STRING_INITIALIZER(struct quit_cmd_tokens, cmd, "quit");
-
-cmdline_parse_inst_t quit_cmd_ctx = {
-	.f = cli_quit_cmd,
-	.data = NULL,
-	.help_str = cmd_quit_help,
-	.tokens = {
-		(void *)&quit_cmd,
-		NULL,
-	},
-};
-
 cmdline_parse_ctx_t commands_ctx[] = {
-	(cmdline_parse_inst_t *)&quit_cmd_ctx,
-
 	(cmdline_parse_inst_t *)&link_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&link_dev_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&link_dev_config_add_cmd_ctx,
@@ -101,16 +75,9 @@ cli_interact()
 	cmdline_interact(cl);
 }
 
-bool
-cli_stopped()
-{
-	return stopped;
-}
-
 void
 cli_quit()
 {
-	stopped = true;
 	cmdline_stdin_exit(cl);
 }
 

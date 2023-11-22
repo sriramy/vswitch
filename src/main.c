@@ -58,10 +58,22 @@ static void signal_handler(int sig)
 	abort();
 }
 
+static uint32_t
+conn_thread(__rte_unused void *arg)
+{
+	while(1) {
+		conn_interact();
+		rte_delay_ms(100);
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	struct conn_config config;
 	int ret;
+	rte_thread_t conn_tid;
 
 	struct sigaction action = {
 		.sa_handler = signal_handler,
@@ -102,20 +114,24 @@ int main(int argc, char **argv)
 	config.addr = strdup(p.host);
 	config.port = p.port;
 	ret = conn_init(&config);
-	while (1) {
-		conn_interact();
-		rte_delay_ms(10);
+	if (ret < 0)
+		RTE_LOG(CRIT, USER1, "conn_init failed (%s)\n",
+			rte_strerror(-ret));
+
+	ret = rte_thread_create_control(&conn_tid, "conn-interact", conn_thread, NULL);
+        if (ret < 0) {
+		RTE_LOG(CRIT, USER1, "Cannot create conn-interact thread\n");
+		goto error;
 	}
 
-	// /* Dispatch loop */
-	// cli_interact();
+	cli_interact();
 
+	rte_thread_join(conn_tid, NULL);
 	rte_eal_mp_wait_lcore();
 
 error:
 	stage_uninit();
-	if (!cli_stopped())
-		cli_quit();
+	cli_quit();
 	conn_free();
 	rte_eal_cleanup();
 

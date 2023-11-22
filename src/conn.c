@@ -97,9 +97,11 @@ conn_interact()
 {
 	struct sockaddr_in client_address;
 	socklen_t client_address_length;
+	char buf[CONN_BUF_LEN_MAX];
+	char delim[] = "\r\n";
 	int fd_client, rc, len;
 	struct cmdline *cl;
-	char buf[CONN_BUF_LEN_MAX];
+	char *line;
 
 	/* Check input arguments */
 	if (conn == NULL)
@@ -130,7 +132,7 @@ conn_interact()
 		len = read(fd_client, buf, (CONN_BUF_LEN_MAX-1));
 		if (len == -1) {
 			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				rte_delay_ms(10);
+				rte_delay_ms(100);
 				continue;
 			}
 			break;
@@ -139,9 +141,11 @@ conn_interact()
 		if (len == 0)
 			break;
 
-		for (char *line = strtok(buf, "\n"); line != NULL; line = strtok(NULL, "\n")) {
+		line = strtok(buf, delim);
+		while (line != NULL) {
 			if (cmdline_in(cl, line, strlen(line)) < 0)
 				break;
+			line = strtok(NULL, delim);
 		}
 	}
 

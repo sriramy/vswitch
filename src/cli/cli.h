@@ -30,7 +30,6 @@ struct quit_cmd_tokens {
 
 int cli_init(char const *prompt);
 void cli_interact();
-bool cli_stopped();
 void cli_quit();
 int cli_execute(const char *file_name);
 
