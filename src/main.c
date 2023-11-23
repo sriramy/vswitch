@@ -59,19 +59,38 @@ static void signal_handler(int sig)
 }
 
 static uint32_t
-conn_thread(__rte_unused void *arg)
+conn_thread(void *arg)
 {
+	struct params *vswitch_params = (struct params *)arg;
+	int ret;
+
+	struct conn_config config = {
+		.welcome = "Welcome to vswitch 0.1.0\n",
+		.prompt = prompt,
+		.addr = strdup(vswitch_params->host),
+		.port = vswitch_params->port,
+	};
+
+	ret = conn_init(&config);
+	if (ret < 0) {
+		RTE_LOG(CRIT, USER1, "conn_init failed (%s)\n",
+			rte_strerror(-ret));
+		goto err;
+	}
+
 	while(1) {
 		conn_interact();
 		rte_delay_ms(100);
 	}
 
-	return 0;
+	conn_free();
+
+err:
+	return ret;
 }
 
 int main(int argc, char **argv)
 {
-	struct conn_config config;
 	int ret;
 	rte_thread_t conn_tid;
 
@@ -109,16 +128,7 @@ int main(int argc, char **argv)
 		RTE_LOG(CRIT, USER1, "cli_execute failed (%s)\n",
 			rte_strerror(-ret));
 
-	config.welcome = "Welcome to vswitch 0.1.0\n";
-	config.prompt = prompt;
-	config.addr = strdup(p.host);
-	config.port = p.port;
-	ret = conn_init(&config);
-	if (ret < 0)
-		RTE_LOG(CRIT, USER1, "conn_init failed (%s)\n",
-			rte_strerror(-ret));
-
-	ret = rte_thread_create_control(&conn_tid, "conn-interact", conn_thread, NULL);
+	ret = rte_thread_create_control(&conn_tid, "conn-interact", conn_thread, &p);
         if (ret < 0) {
 		RTE_LOG(CRIT, USER1, "Cannot create conn-interact thread\n");
 		goto error;
@@ -132,7 +142,6 @@ int main(int argc, char **argv)
 error:
 	stage_uninit();
 	cli_quit();
-	conn_free();
 	rte_eal_cleanup();
 
 	return ret;
