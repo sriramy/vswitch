@@ -52,3 +52,5 @@ executable('vswitch',
     install: true,
     include_directories: includes,
     dependencies: deps) 
+
+subdir('vsctl')
