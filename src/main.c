@@ -22,6 +22,8 @@
 #include "options.h"
 #include "stage.h"
 
+static volatile bool stopped = false;
+
 static char const prompt[] = "vswitch> ";
 static struct params p = params_default;
 
@@ -36,7 +38,7 @@ static void signal_handler(int sig)
 		fflush(stdout);
 		char c = getchar();
 		if (c == 'y' || c == 'Y') {
-			cli_quit();
+			stopped = true;
 			return;
 		}
 
@@ -78,9 +80,9 @@ conn_thread(void *arg)
 		goto err;
 	}
 
-	while(1) {
-		conn_interact();
-		rte_delay_ms(100);
+	while(!stopped) {
+		conn_accept();
+		conn_poll();
 	}
 
 	conn_free();
@@ -100,6 +102,7 @@ int main(int argc, char **argv)
 	sigaction(SIGINT, &action, NULL);
 	sigaction(SIGTERM, &action, NULL);
 	sigaction(SIGSEGV, &action, NULL);
+	signal(SIGPIPE, SIG_IGN);
 
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
@@ -135,6 +138,9 @@ int main(int argc, char **argv)
 	}
 
 	cli_interact();
+	stopped = true;
+
+	RTE_LOG(CRIT, USER1, "Stopping vswitch...\n");
 
 	rte_thread_join(conn_tid, NULL);
 	rte_eal_mp_wait_lcore();
