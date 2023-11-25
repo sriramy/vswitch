@@ -22,7 +22,7 @@
 #include "options.h"
 #include "stage.h"
 
-static volatile bool stopped = false;
+static volatile int stopped = 0;
 
 static char const prompt[] = "vswitch> ";
 static struct params p = params_default;
@@ -38,7 +38,7 @@ static void signal_handler(int sig)
 		fflush(stdout);
 		char c = getchar();
 		if (c == 'y' || c == 'Y') {
-			stopped = true;
+			stopped = 1;
 			return;
 		}
 
@@ -73,6 +73,8 @@ conn_thread(void *arg)
 		.port = vswitch_params->port,
 	};
 
+	RTE_LOG(CRIT, USER1, "Starting telnet server(%s:%u)\n",
+		config.addr, config.port);
 	ret = conn_init(&config);
 	if (ret < 0) {
 		RTE_LOG(CRIT, USER1, "conn_init failed (%s)\n",
@@ -84,6 +86,9 @@ conn_thread(void *arg)
 		conn_accept();
 		conn_poll();
 	}
+
+	RTE_LOG(CRIT, USER1, "Stopping telnet server(%s:%u) stopped:%u\n",
+		config.addr, config.port, stopped);
 
 	conn_free();
 
@@ -137,10 +142,9 @@ int main(int argc, char **argv)
 		goto error;
 	}
 
+	RTE_LOG(CRIT, USER1, "Starting interactive CLI\n");
 	cli_interact();
-	stopped = true;
-
-	RTE_LOG(CRIT, USER1, "Stopping vswitch...\n");
+	RTE_LOG(CRIT, USER1, "Stopping interactive CLI\n");
 
 	rte_thread_join(conn_tid, NULL);
 	rte_eal_mp_wait_lcore();

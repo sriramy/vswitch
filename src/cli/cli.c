@@ -107,8 +107,7 @@ cli_execute(const char *file_name)
 			cmdline_printf(cl, "Bad arguments\n");
 	}
 
+	free(line);
 	fclose(fp);
-	if (line)
-		free(line);
 	return 0;
 }
