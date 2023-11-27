@@ -46,6 +46,11 @@ vswitch: $(VSWITCH_SRC_DIR)/*
 	$(Q)meson configure build $(P)
 	$(Q)meson compile -C build $(P)
 
+.PHONY: vsnl-interceptor
+vsnl-interceptor:
+	@echo "  vsnl-interceptor"
+	$(Q) $(CC) -shared -fPIC -o vsnl-interceptor/vsint-sendmsg.so vsnl-interceptor/sendmsg.c -ldl
+
 .PHONY: clean
 clean:
 	$(Q)ninja -C build -t clean $(P)
