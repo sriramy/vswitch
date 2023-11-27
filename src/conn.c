@@ -119,7 +119,7 @@ conn_init(struct conn_config *config)
 	if (rc == -1)
 		goto err;
 
-	rc = listen(fd_server, 16);
+	rc = listen(fd_server, SOMAXCONN);
 	if (rc == -1)
 		goto err;
 
