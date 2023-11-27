@@ -12,11 +12,10 @@
 
 int main(int argc, char *argv[])
 {
-	char finish[] = "\0\1\0\1\0";
 	struct sockaddr_in servaddr;
+	char prompt[] = "vswitch>";
 	char buf[MAX_CMD_LEN];
-	int i = 0, again = 1;
-	int fd, rc;
+	int i = 0, fd, rc;
 
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
@@ -39,7 +38,8 @@ int main(int argc, char *argv[])
 		strcat(buf, " ");
 		strcat(buf, argv[i]);
 	}
-	strcat(buf, "\r\n");
+	strcat(buf, "\n");
+	strcat(buf, "\n");
 
 	rc = write(fd, buf, strlen(buf));
 	if (rc < 0) {
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	while (again) {
+	while (1) {
 		memset(buf, 0, sizeof(buf));
 		rc = read(fd, buf, sizeof(buf));
 		if (rc == -1) {
@@ -57,10 +57,15 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: read failed %s", argv[0], strerror(errno));
 		}
 
-		if (rc > 0)
+		if (rc > 0) {
 			printf("%s\n", buf);
-
-		again = (rc > 0) && (strncmp(buf, finish, strlen(finish)) != 0);
+			fflush(stdout);
+			if (strncmp(buf, prompt, strlen(prompt)) == 0) {
+				break;
+			}
+		} else {
+			break;
+		}
 	};
 
 err:

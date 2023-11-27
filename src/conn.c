@@ -31,8 +31,6 @@ static int control_cb(struct client_conn *client_conn);
 static int
 data_cb(struct client_conn *client_conn)
 {
-	char finish[] = "\0\1\0\1\0";
-	char quit[] = "quit";
 	char delim[] = "\n";
 	char *line;
 	int len;
@@ -50,20 +48,15 @@ data_cb(struct client_conn *client_conn)
 	if (len == 0)
 		return 0;
 
+	cmdline_printf(client_conn->cl, "%s", client_conn->buf);
 	line = strtok(client_conn->buf, delim);
 	while (line != NULL) {
-		if (strncmp(line, quit, strlen(quit)) == 0) {
-			control_cb(client_conn);
-			return 0;
-		}
-
 		if (cmdline_in(client_conn->cl, line, strlen(line)) < 0)
 			break;
 
 		line = strtok(NULL, delim);
 	}
 
-	cmdline_printf(client_conn->cl, "%s", finish);
 	return 0;
 }
 
@@ -126,7 +119,7 @@ conn_init(struct conn_config *config)
 	if (rc == -1)
 		goto err;
 
-	rc = listen(fd_server, 1);
+	rc = listen(fd_server, 16);
 	if (rc == -1)
 		goto err;
 
