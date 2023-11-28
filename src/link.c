@@ -228,6 +228,12 @@ link_start()
 		if (rc < 0) {
 			return rc;
 		}
+
+		rc = rte_eth_dev_set_link_up(l->config.link_id);
+		if ((rc < 0) && (rc != -ENOTSUP)) {
+			rte_eth_dev_stop(l->config.link_id);
+			return rc;
+		}
 	}
 
 	return rc;

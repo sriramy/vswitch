@@ -6,18 +6,20 @@
 #ifndef __VSWITCH_SRC_API_STAGE_H_
 #define __VSWITCH_SRC_API_STAGE_H_
 
-#include <stdio.h>
-#include <stdlib.h>
+#define STAGE_NAME_MAX_LEN	(64)
+#define STAGE_MAX		(16)
+#define STAGE_QUEUE_MAX		(4)
 
-#include <rte_bitmap.h>
+struct stage_queue_info {
 
-#define STAGE_NAME_MAX_LEN (64)
-#define STAGE_MAX (16)
+};
 
 struct stage_config {
 	char name[STAGE_NAME_MAX_LEN];
-	int stage_id;
+	uint32_t stage_id;
 	uint32_t coremask;
+	uint32_t nb_queues;
+	struct stage_queue_info queue_info[STAGE_QUEUE_MAX];
 };
 
 struct stage {

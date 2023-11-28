@@ -98,6 +98,7 @@ cli_execute(const char *file_name)
 		if (is_comment(line))
 			continue;
 
+		cmdline_printf(cl, "%s", line);
 		rc = cmdline_parse(cl, line);
 		if (rc == CMDLINE_PARSE_AMBIGUOUS)
 			cmdline_printf(cl, "Ambiguous command\n");

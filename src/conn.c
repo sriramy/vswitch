@@ -48,7 +48,6 @@ data_cb(struct client_conn *client_conn)
 	if (len == 0)
 		return 0;
 
-	cmdline_printf(client_conn->cl, "%s", client_conn->buf);
 	line = strtok(client_conn->buf, delim);
 	while (line != NULL) {
 		if (cmdline_in(client_conn->cl, line, strlen(line)) < 0)

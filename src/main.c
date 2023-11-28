@@ -12,7 +12,10 @@
 #include <rte_debug.h>
 #include <rte_eal.h>
 #include <rte_errno.h>
+#include <rte_launch.h>
 #include <rte_log.h>
+#include <rte_pause.h>
+#include <rte_thread.h>
 #include <cmdline.h>
 #include <cmdline_socket.h>
 
@@ -85,6 +88,7 @@ conn_thread(void *arg)
 	while(!stopped) {
 		conn_accept();
 		conn_poll();
+		rte_pause();
 	}
 
 	RTE_LOG(CRIT, USER1, "Stopping telnet server(%s:%u) stopped:%u\n",

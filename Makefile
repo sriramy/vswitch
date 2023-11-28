@@ -28,7 +28,7 @@ stubs: $(CMD_GEN_H)
 libdpdk: $(LIBDPDK_SRC)
 	@echo "  libdpdk"
 	$(Q)meson setup dpdk/build dpdk $(P)
-	$(Q)meson configure -Dmax_lcores=4 -Denable_apps=test-pmd dpdk/build $(P)
+	$(Q)meson configure -Dmax_lcores=8 -Denable_apps=test-pmd dpdk/build $(P)
 	$(Q)meson compile -C dpdk/build $(P)
 
 .PHONY: libdpdk_clean

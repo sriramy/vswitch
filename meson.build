@@ -41,10 +41,9 @@ endforeach
 
 dbus = dependency('dbus-1', required: true, method: 'pkg-config', static: true)
 dpdk = dependency('libdpdk', required: true, method: 'pkg-config', static: true)
-dpdk_prefix = dpdk.get_variable(pkgconfig: 'prefix')
-dpdk_libs_path = join_paths(dpdk_prefix, get_option('libdir'))
+dpdk_libs = dependency('libdpdk-libs', required: true, method: 'pkg-config', static: true)
 
-deps = [dpdk, dbus]
+deps = [dbus, dpdk, dpdk_libs]
 
 subdir('src')
 executable('vswitch',

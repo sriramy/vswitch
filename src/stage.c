@@ -62,9 +62,7 @@ stage_init()
 		rte_bitmap_set(enabled_cores, core_id);
 	}
 
-	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
-		rte_bitmap_clear(used_cores, core_id);
-	}
+	rte_bitmap_reset(used_cores);
 
 	return;
 
@@ -110,17 +108,18 @@ stage_get_used_coremask()
 	return used_coremask;
 }
 
-static int16_t 
-stage_get_free_id() {
-	int16_t i = 0;
+static int
+stage_get_free_id(uint32_t *stage_id) {
+	int i = 0;
 
-	for (; i < STAGE_MAX; i++) {
+	for (i = 0; i < STAGE_MAX; i++) {
 		if (!stage_array[i]) {
-			return i;
+			*stage_id = i;
+			break;
 		}
 	}
 
-	return -1;
+	return (i == STAGE_MAX) ? 0 : 1;
 }
 
 struct stage*
@@ -154,8 +153,7 @@ stage_config_add(struct stage_config *config)
         }
 
 	memcpy(&s->config, config, sizeof(*config));
-	s->config.stage_id = stage_get_free_id();
-	if (s->config.stage_id < 0) {
+	if (stage_get_free_id(&s->config.stage_id) != 0) {
 		rc = -ENOMEM;
 		goto err;
 	}
