@@ -38,7 +38,7 @@ cli_stage_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 
 	rc = stage_config_add(&config);
 	if (rc < 0) {
-                cmdline_printf(cl, "stage add %s failed: %s\n", config.name, rte_strerror(rte_errno));
+                cmdline_printf(cl, "stage add %s failed: %s\n", config.name, rte_strerror(-rc));
         }
 }
 

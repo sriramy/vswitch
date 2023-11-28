@@ -153,7 +153,7 @@ stage_config_add(struct stage_config *config)
         }
 
 	memcpy(&s->config, config, sizeof(*config));
-	if (stage_get_free_id(&s->config.stage_id) != 0) {
+	if (!stage_get_free_id(&s->config.stage_id)) {
 		rc = -ENOMEM;
 		goto err;
 	}
