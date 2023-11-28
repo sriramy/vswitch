@@ -18,12 +18,6 @@
 #include "stage.h"
 #include "vswitch.h"
 
-static char const
-cmd_vswitch_show_help[] = "vswitch show";
-
-static char const
-cmd_vswitch_start_help[] = "vswitch start";
-
 static void
 cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
@@ -52,7 +46,7 @@ cmdline_parse_token_string_t vswitch_action_start =
 cmdline_parse_inst_t vswitch_show_cmd_ctx = {
 	.f = cli_vswitch_show,
 	.data = NULL,
-	.help_str = cmd_vswitch_show_help,
+	.help_str = "vswitch show",
 	.tokens = {
 		(void *)&vswitch_cmd,
                 (void *)&vswitch_action_show,
@@ -63,7 +57,7 @@ cmdline_parse_inst_t vswitch_show_cmd_ctx = {
 cmdline_parse_inst_t vswitch_start_cmd_ctx = {
 	.f = cli_vswitch_start,
 	.data = NULL,
-	.help_str = cmd_vswitch_start_help,
+	.help_str = "vswitch start",
 	.tokens = {
 		(void *)&vswitch_cmd,
                 (void *)&vswitch_action_start,

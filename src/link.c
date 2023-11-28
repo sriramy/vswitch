@@ -234,7 +234,7 @@ link_start()
 }
 
 int
-link_iterate(link_iter_cb cb)
+link_map_walk(link_map_cb cb)
 {
 	struct link *l;
 	int rc = 0;

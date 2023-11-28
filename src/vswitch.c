@@ -34,7 +34,7 @@ static int launch_worker(__attribute__((unused)) void *arg) {
 	RTE_LOG(INFO, USER1, "Worker %u starting\n", lcore_id);
 
 	while(1) {
-		link_iterate(fwd_pkts);
+		link_map_walk(fwd_pkts);
 	}
 
 	RTE_LOG(INFO, USER1, "Worker %u stopping\n", lcore_id);

@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (rc > 0) {
-			printf("%s\n", buf);
+			printf("%s", buf);
 			fflush(stdout);
 			if (strncmp(buf, prompt, strlen(prompt)) == 0) {
 				break;
