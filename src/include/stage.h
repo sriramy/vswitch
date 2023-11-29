@@ -8,18 +8,38 @@
 
 #define STAGE_NAME_MAX_LEN	(64)
 #define STAGE_MAX		(16)
-#define STAGE_QUEUE_MAX		(4)
 
-struct stage_queue_info {
+enum {
+	STAGE_TYPE_RX = 0,
+	STAGE_TYPE_WORKER,
+	STAGE_TYPE_TX,
+	STAGE_TYPE_MAX
+};
 
+struct stage_queue_config {
+	uint8_t type;
+	union {
+		struct {
+			uint8_t rsvd;
+			uint8_t out;
+		} rx;
+		struct {
+			uint8_t in;
+			uint8_t out;
+		} worker;
+		struct {
+			uint8_t in;
+			uint8_t rsvd;
+		} tx;
+	};
+	uint8_t rsvd1;
 };
 
 struct stage_config {
 	char name[STAGE_NAME_MAX_LEN];
 	uint32_t stage_id;
 	uint32_t coremask;
-	uint32_t nb_queues;
-	struct stage_queue_info queue_info[STAGE_QUEUE_MAX];
+	struct stage_queue_config queue;
 };
 
 struct stage {
@@ -29,7 +49,7 @@ struct stage {
 TAILQ_HEAD(stage_head, stage);
 
 void stage_init();
-void stage_uninit();
+void stage_quit();
 
 uint64_t stage_get_enabled_coremask();
 uint64_t stage_get_used_coremask();
@@ -37,5 +57,7 @@ uint64_t stage_get_used_coremask();
 struct stage* stage_config_get(char const *name);
 int stage_config_add(struct stage_config *config);
 int stage_config_rem(char const *name);
+
+int stage_config_set_queue(char const *name, struct stage_queue_config *config);
 
 #endif /* __VSWITCH_SRC_API_STAGE_H_ */

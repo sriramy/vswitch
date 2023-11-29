@@ -40,6 +40,9 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&stage_add_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_rem_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_show_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_type_rx_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_type_worker_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_type_tx_cmd_ctx,
 
 	(cmdline_parse_inst_t *)&vswitch_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&vswitch_start_cmd_ctx,
@@ -95,10 +98,10 @@ cli_execute(const char *file_name)
 		return -ENOENT;
 
 	while ((read = getline(&line, &len, fp)) != -1) {
+		cmdline_printf(cl, "%s", line);
 		if (is_comment(line))
 			continue;
 
-		cmdline_printf(cl, "%s", line);
 		rc = cmdline_parse(cl, line);
 		if (rc == CMDLINE_PARSE_AMBIGUOUS)
 			cmdline_printf(cl, "Ambiguous command\n");

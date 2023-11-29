@@ -21,17 +21,25 @@
 static void
 cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
-        cmdline_printf(cl, "enabled_coremask: 0x%04lx\n",
+	struct vswitch_config *config = vswitch_config_get();
+	cmdline_printf(cl, "Vswitch\n");
+	if (!config) {
+		cmdline_printf(cl, "  Not available\n");
+	} else {
+		cmdline_printf(cl, "  Event device: %d\n", config->eventdev_id);
+		cmdline_printf(cl, "  Driver: %s\n", config->eventdev_info.driver_name);
+	}
+	cmdline_printf(cl, "Stage\n");
+        cmdline_printf(cl, "  enabled_coremask: 0x%04lx\n",
                 stage_get_enabled_coremask());
-        cmdline_printf(cl, "used_coremask: 0x%04lx\n",
+        cmdline_printf(cl, "  used_coremask: 0x%04lx\n",
                 stage_get_used_coremask());
 }
 
 static void
 cli_vswitch_start(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
-        cmdline_printf(cl, "Starting links...\n");
-        link_start();
+        cmdline_printf(cl, "Starting vswitch...\n");
         vswitch_start();
         cmdline_printf(cl, "Done.\n");
 }

@@ -62,8 +62,6 @@ stage_init()
 		rte_bitmap_set(enabled_cores, core_id);
 	}
 
-	rte_bitmap_reset(used_cores);
-
 	return;
 
 err:
@@ -74,7 +72,7 @@ err:
 }
 
 void
-stage_uninit()
+stage_quit()
 {
 	if (enabled_cores_bitmap)
 		rte_free(enabled_cores_bitmap);
@@ -203,6 +201,19 @@ stage_config_rem(char const *name)
                 TAILQ_REMOVE(&stage_node, s, next);
 		stage_array[s->config.stage_id] = NULL;
 		rte_free(s);
+                return 0;
+        }
+
+        return -ENOENT;
+}
+
+int
+stage_config_set_queue(char const *name, struct stage_queue_config *config)
+{
+        struct stage *s = stage_config_get(name);
+
+        if (s) {
+		s->config.queue = *config;
                 return 0;
         }
 

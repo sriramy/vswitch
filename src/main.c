@@ -24,6 +24,7 @@
 #include "log.h"
 #include "options.h"
 #include "stage.h"
+#include "vswitch.h"
 
 static volatile int stopped = 0;
 
@@ -132,6 +133,7 @@ int main(int argc, char **argv)
 	}
 
 	stage_init();
+	vswitch_init();
 
 	rte_delay_ms(1);
 
@@ -154,7 +156,8 @@ int main(int argc, char **argv)
 	rte_eal_mp_wait_lcore();
 
 error:
-	stage_uninit();
+	vswitch_quit();
+	stage_quit();
 	cli_quit();
 	rte_eal_cleanup();
 
