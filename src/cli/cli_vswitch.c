@@ -30,9 +30,9 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 		cmdline_printf(cl, "  Driver: %s\n", config->eventdev_info.driver_name);
 	}
 	cmdline_printf(cl, "Stage\n");
-        cmdline_printf(cl, "  enabled_coremask: 0x%04lx\n",
+        cmdline_printf(cl, "  Enabled cores: 0x%04lx\n",
                 stage_get_enabled_coremask());
-        cmdline_printf(cl, "  used_coremask: 0x%04lx\n",
+        cmdline_printf(cl, "  Used cores: 0x%04lx\n",
                 stage_get_used_coremask());
 }
 

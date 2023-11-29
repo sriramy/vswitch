@@ -12,6 +12,7 @@
 #include <rte_mbuf.h>
 
 #include "link.h"
+#include "stage.h"
 #include "vswitch.h"
 
 #define DEFAULT_PKT_BURST (32)
@@ -67,6 +68,7 @@ vswitch_init()
 	}
 
 	// TODO: Pick eventdev based on configuration instead
+	memset(config, 0, sizeof(*config));
 	config->eventdev_id = 0;
 	rc = rte_event_dev_info_get(config->eventdev_id, &config->eventdev_info);
 	if (rc < 0) {
@@ -92,12 +94,19 @@ vswitch_config_get()
 {
 	return config;
 }
+
+static int stage_configure(__rte_unused struct stage_config *stage_config, __rte_unused void *data) {
+	config->nb_ports++;
+	return 0;
+}
+
 int
 vswitch_start()
 {
 	uint16_t lcore_id;
 
 	link_start();
+	stage_config_walk(stage_configure, config);
 
 	RTE_LCORE_FOREACH_WORKER(lcore_id) {
 		rte_eal_remote_launch(launch_worker, NULL, lcore_id);

@@ -219,3 +219,19 @@ stage_config_set_queue(char const *name, struct stage_queue_config *config)
 
         return -ENOENT;
 }
+
+int
+stage_config_walk(stage_config_cb cb, void *data)
+{
+	struct stage *s;
+	int rc = 0;
+
+	TAILQ_FOREACH(s, &stage_node, next) {
+		rc = cb(&s->config, data);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
+	return rc;
+}

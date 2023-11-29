@@ -48,6 +48,8 @@ struct stage {
 };
 TAILQ_HEAD(stage_head, stage);
 
+typedef int (*stage_config_cb) (struct stage_config *config, void *data);
+
 void stage_init();
 void stage_quit();
 
@@ -59,5 +61,6 @@ int stage_config_add(struct stage_config *config);
 int stage_config_rem(char const *name);
 
 int stage_config_set_queue(char const *name, struct stage_queue_config *config);
+int stage_config_walk(stage_config_cb cb, void *data);
 
 #endif /* __VSWITCH_SRC_API_STAGE_H_ */

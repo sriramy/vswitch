@@ -11,6 +11,8 @@
 struct vswitch_config {
 	int eventdev_id;
 	struct rte_event_dev_info eventdev_info;
+	int nb_ports;
+	int nb_queues;
 };
 
 int vswitch_init();
