@@ -26,8 +26,10 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 	if (!config) {
 		cmdline_printf(cl, "  Not available\n");
 	} else {
-		cmdline_printf(cl, "  Event device: %d\n", config->eventdev_id);
-		cmdline_printf(cl, "  Driver: %s\n", config->eventdev_info.driver_name);
+		cmdline_printf(cl, "  Event device: %d\n", config->ev_id);
+		cmdline_printf(cl, "  Driver: %s\n", config->ev_info.driver_name);
+		cmdline_printf(cl, "  Number of ports: %d\n", config->nb_ports);
+		cmdline_printf(cl, "  Number of queues: %d\n", config->nb_queues);
 	}
 	cmdline_printf(cl, "Stage\n");
         cmdline_printf(cl, "  Enabled cores: 0x%04lx\n",

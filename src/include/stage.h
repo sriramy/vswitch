@@ -6,6 +6,8 @@
 #ifndef __VSWITCH_SRC_API_STAGE_H_
 #define __VSWITCH_SRC_API_STAGE_H_
 
+#include <rte_eventdev.h>
+
 #define STAGE_NAME_MAX_LEN	(64)
 #define STAGE_MAX		(16)
 
@@ -21,18 +23,20 @@ struct stage_queue_config {
 	union {
 		struct {
 			uint8_t rsvd;
+			uint8_t rsvd1;
 			uint8_t out;
 		} rx;
 		struct {
+			struct rte_event_queue_conf ev_queue_config;
 			uint8_t in;
 			uint8_t out;
 		} worker;
 		struct {
+			struct rte_event_queue_conf ev_queue_config;
 			uint8_t in;
 			uint8_t rsvd;
 		} tx;
 	};
-	uint8_t rsvd1;
 };
 
 struct stage_config {

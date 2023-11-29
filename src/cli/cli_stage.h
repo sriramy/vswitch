@@ -18,6 +18,8 @@ struct stage_cmd_tokens {
 	cmdline_fixed_string_t stage_type;
 	cmdline_fixed_string_t in_queue;
 	cmdline_fixed_string_t out_queue;
+	cmdline_fixed_string_t schedule;
+	cmdline_fixed_string_t schedule_type;
 	uint32_t mask;
 	uint8_t type;
 	uint8_t in_qid;

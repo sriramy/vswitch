@@ -8,11 +8,23 @@
 
 #include <rte_eventdev.h>
 
+#define EV_QUEUE_ID_INVALID	(0xFF)
+
+struct lcore_params {
+	uint16_t core_id;
+	uint16_t enabled;
+	uint16_t ev_port_id;
+	uint8_t ev_queue_needed;
+	uint8_t ev_queue_id;
+	struct rte_event_port_conf ev_port_config;
+} __rte_cache_aligned;
+
 struct vswitch_config {
-	int eventdev_id;
-	struct rte_event_dev_info eventdev_info;
 	int nb_ports;
 	int nb_queues;
+	int ev_id;
+	struct rte_event_dev_info ev_info;
+	struct lcore_params lcores[RTE_MAX_LCORE];
 };
 
 int vswitch_init();

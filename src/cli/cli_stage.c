@@ -5,6 +5,7 @@
 
 #include <rte_eal.h>
 #include <rte_ethdev.h>
+#include <rte_eventdev.h>
 #include <rte_malloc.h>
 
 #include <cmdline.h>
@@ -107,6 +108,10 @@ cli_stage_set_type_worker(void *parsed_result, struct cmdline *cl, __rte_unused 
 	queue_config.type = STAGE_TYPE_WORKER;
 	queue_config.worker.in = res->in_qid;
 	queue_config.worker.out = res->out_qid;
+	queue_config.worker.ev_queue_config.schedule_type =
+		(strcmp(res->schedule_type, "atomic") == 0) ?
+		RTE_SCHED_TYPE_ATOMIC :
+		RTE_SCHED_TYPE_ORDERED;
 
         rc = stage_config_set_queue(stage_name, &queue_config);
         if (rc < 0) {
@@ -128,6 +133,10 @@ cli_stage_set_type_tx(void *parsed_result, struct cmdline *cl, __rte_unused void
 	memset(&queue_config, 0, sizeof(queue_config));
 	queue_config.type = STAGE_TYPE_TX;
 	queue_config.tx.in = res->in_qid;
+	queue_config.worker.ev_queue_config.schedule_type =
+		(strcmp(res->schedule_type, "atomic") == 0) ?
+		RTE_SCHED_TYPE_ATOMIC :
+		RTE_SCHED_TYPE_ORDERED;
 
         rc = stage_config_set_queue(stage_name, &queue_config);
         if (rc < 0) {
@@ -167,6 +176,10 @@ cmdline_parse_token_string_t stage_out_queue =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, out_queue, "out_queue");
 cmdline_parse_token_num_t stage_out_qid =
 	TOKEN_NUM_INITIALIZER(struct stage_cmd_tokens, out_qid, RTE_UINT32);
+cmdline_parse_token_string_t stage_schedule =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule, "schedule");
+cmdline_parse_token_string_t stage_schedule_type =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule_type, "atomic#ordered");
 
 static char const
 cmd_stage_add_help[] = "stage add <stage_name> [coremask <mask>]";
@@ -235,7 +248,7 @@ cmdline_parse_inst_t stage_set_type_rx_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_type_worker_help[] = "stage set <stage_name> type worker in_queue <in_qid> out_queue <out_qid>";
+cmd_stage_set_type_worker_help[] = "stage set <stage_name> type worker in_queue <in_qid> out_queue <out_qid> schedule <atomic#ordered>";
 
 cmdline_parse_inst_t stage_set_type_worker_cmd_ctx = {
 	.f = cli_stage_set_type_worker,
@@ -251,12 +264,14 @@ cmdline_parse_inst_t stage_set_type_worker_cmd_ctx = {
 		(void *)&stage_in_qid,
 		(void *)&stage_out_queue,
 		(void *)&stage_out_qid,
+		(void *)&stage_schedule,
+		(void *)&stage_schedule_type,
 		NULL,
 	},
 };
 
 static char const
-cmd_stage_set_type_tx_help[] = "stage set <stage_name> type tx in_queue <in_qid>";
+cmd_stage_set_type_tx_help[] = "stage set <stage_name> type tx in_queue <in_qid> schedule <atomic#ordered>";
 
 cmdline_parse_inst_t stage_set_type_tx_cmd_ctx = {
 	.f = cli_stage_set_type_tx,
@@ -270,6 +285,8 @@ cmdline_parse_inst_t stage_set_type_tx_cmd_ctx = {
 		(void *)&stage_type_tx,
 		(void *)&stage_in_queue,
 		(void *)&stage_in_qid,
+		(void *)&stage_schedule,
+		(void *)&stage_schedule_type,
 		NULL,
 	},
 };
