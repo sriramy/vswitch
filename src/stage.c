@@ -23,6 +23,14 @@ static struct stage *stage_array[STAGE_MAX];
 
 static struct stage_head stage_node = TAILQ_HEAD_INITIALIZER(stage_node);
 
+const char *stage_type_str[] =
+{
+    [STAGE_TYPE_RX] 	= "rx",
+    [STAGE_TYPE_WORKER]	= "worker",
+    [STAGE_TYPE_TX]	= "tx",
+    [STAGE_TYPE_MAX]	= "invalid",
+};
+
 void
 stage_init()
 {

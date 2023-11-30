@@ -300,15 +300,6 @@ vswitch_start()
 		if (!lcore->enabled)
 			continue;
 
-		RTE_LOG(INFO, USER1, "Lcore %u config: "
-			"type: %u "
-			"ev_id: %u, ev_port_id: %u "
-			"ev_in_queue: %u ev_out_queue: %u "
-			"\n",
-			core_id, lcore->type,
-			lcore->ev_id, lcore->ev_port_id,
-			lcore->ev_in_queue, lcore->ev_out_queue);
-
 		rc = rte_event_port_setup(config->ev_id,
 					  lcore->ev_port_id,
 					  &lcore->ev_port_config);

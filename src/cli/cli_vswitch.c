@@ -22,20 +22,42 @@ static void
 cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct vswitch_config *config = vswitch_config_get();
+	struct lcore_params *lcore;
+	uint16_t core_id;
+
 	cmdline_printf(cl, "Vswitch\n");
 	if (!config) {
-		cmdline_printf(cl, "  Not available\n");
-	} else {
-		cmdline_printf(cl, "  Event device: %d\n", config->ev_id);
-		cmdline_printf(cl, "  Driver: %s\n", config->ev_info.driver_name);
-		cmdline_printf(cl, "  Number of ports: %d\n", config->nb_ports);
-		cmdline_printf(cl, "  Number of queues: %d\n", config->nb_queues);
+		cmdline_printf(cl, "  Not initialized\n");
+		return;
 	}
-	cmdline_printf(cl, "Stage\n");
-        cmdline_printf(cl, "  Enabled cores: 0x%04lx\n",
-                stage_get_enabled_coremask());
-        cmdline_printf(cl, "  Used cores: 0x%04lx\n",
-                stage_get_used_coremask());
+
+	cmdline_printf(cl, "  Enabled worker cores:\t0x%04lx\n",
+		stage_get_enabled_coremask());
+	cmdline_printf(cl, "  Used worker cores:\t0x%04lx\n",
+		stage_get_used_coremask());
+	cmdline_printf(cl, "  Event device,\tid: %d, \tdriver: %s\n",
+			config->ev_id,
+			config->ev_info.driver_name);
+	cmdline_printf(cl, "  Number of ports:\t%d\n", config->nb_ports);
+	cmdline_printf(cl, "  Number of queues:\t%d\n", config->nb_queues);
+	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
+		lcore = &config->lcores[core_id];
+		if (!lcore->enabled) {
+			if (core_id == rte_get_main_lcore())
+				cmdline_printf(cl, "Main\tlcore %u\n", core_id);
+			else if (rte_lcore_has_role(core_id, ROLE_SERVICE))
+				cmdline_printf(cl, "Service\tlcore %u\n", core_id);
+			else
+				cmdline_printf(cl, "Lcore %u disabled\n", core_id);
+		} else {
+			cmdline_printf(cl, "Worker\tlcore %u:\ttype: %s\t"
+				"ev_id: %u,\tev_port_id: %u\t"
+				"ev_in_queue: %u\tev_out_queue: %u\n",
+				core_id, stage_type_str[lcore->type],
+				lcore->ev_id, lcore->ev_port_id,
+				lcore->ev_in_queue, lcore->ev_out_queue);
+		}
+	}
 }
 
 static void

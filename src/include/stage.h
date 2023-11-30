@@ -11,6 +11,8 @@
 #define STAGE_NAME_MAX_LEN	(64)
 #define STAGE_MAX		(16)
 
+extern const char *stage_type_str[];
+
 enum {
 	STAGE_TYPE_RX = 0,
 	STAGE_TYPE_WORKER,
