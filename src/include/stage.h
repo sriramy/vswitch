@@ -20,23 +20,9 @@ enum {
 
 struct stage_queue_config {
 	uint8_t type;
-	union {
-		struct {
-			uint8_t rsvd;
-			uint8_t rsvd1;
-			uint8_t out;
-		} rx;
-		struct {
-			struct rte_event_queue_conf ev_queue_config;
-			uint8_t in;
-			uint8_t out;
-		} worker;
-		struct {
-			struct rte_event_queue_conf ev_queue_config;
-			uint8_t in;
-			uint8_t rsvd;
-		} tx;
-	};
+	uint8_t in;
+	uint8_t out;
+	struct rte_event_queue_conf ev_queue_config;
 };
 
 struct stage_config {

@@ -16,33 +16,132 @@
 #include "vswitch.h"
 
 #define DEFAULT_PKT_BURST (32)
+#define DEFAULT_EVENT_BURST (32)
 
 static struct vswitch_config *config = NULL;
 
 int
-fwd_pkts(uint16_t link_id, uint16_t peer_link_id)
+produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
 {
+	struct lcore_params *lcore = (struct lcore_params*) arg;
+	struct rte_event events[DEFAULT_EVENT_BURST];
 	struct rte_mbuf *mbufs[DEFAULT_PKT_BURST];
-	uint16_t rc;
+	uint16_t nb_rx, nb_tx;
+	int i;
 
-	rc = rte_eth_rx_burst(link_id, 0, mbufs, DEFAULT_PKT_BURST);
-	if (rc > 0) {
-		rte_eth_tx_burst(peer_link_id, 0, mbufs, rc);
+	nb_rx = rte_eth_rx_burst(link_id,
+				 0,
+				 mbufs,
+				 DEFAULT_PKT_BURST);
+	for (i = 0; i < nb_rx; i++) {
+		events[i].flow_id = mbufs[i]->hash.rss;
+		events[i].op = RTE_EVENT_OP_NEW;
+		events[i].sched_type = lcore->type;
+		events[i].queue_id = lcore->ev_out_queue;
+		events[i].event_type = RTE_EVENT_TYPE_ETHDEV;
+		events[i].sub_event_type = peer_link_id;
+		events[i].priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
+		events[i].mbuf = mbufs[i];
 	}
 
-	return rc;
+	nb_tx = rte_event_enqueue_burst(lcore->ev_id,
+					lcore->ev_port_id,
+					events,
+					nb_rx);
+	if (nb_tx != nb_rx) {
+		RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)",
+			lcore->core_id, nb_rx, nb_tx);
+		for(i = nb_tx; i < nb_rx; i++)
+			rte_pktmbuf_free(mbufs[i]);
+		return -EIO;
+	}
+
+	return 0;
 }
 
-static int launch_worker(__attribute__((unused)) void *arg) {
+static int
+launch_rx(void *arg)
+{
+	struct lcore_params *lcore = (struct lcore_params*) arg;
 	uint16_t core_id = rte_lcore_id();
+
+	RTE_LOG(INFO, USER1, "RX producer %u starting\n", core_id);
+
+	while(1) {
+		link_map_walk(produce_pkts, lcore);
+	}
+
+	RTE_LOG(INFO, USER1, "RX producer %u stopping\n", core_id);
+
+	return 0;
+}
+
+static int
+launch_worker(void *arg)
+{
+	struct lcore_params *lcore = (struct lcore_params*) arg;
+	struct rte_event events[DEFAULT_EVENT_BURST];
+	uint16_t core_id = rte_lcore_id();
+	uint16_t nb_rx, nb_tx;
+	int i, timeout = 0;
 
 	RTE_LOG(INFO, USER1, "Worker %u starting\n", core_id);
 
 	while(1) {
-		link_map_walk(fwd_pkts);
+		nb_rx = rte_event_dequeue_burst(lcore->ev_id,
+						lcore->ev_port_id,
+						events,
+						DEFAULT_EVENT_BURST,
+						timeout);
+
+		for (i = 0; i < nb_rx; i++) {
+			events[i].op = RTE_EVENT_OP_FORWARD;
+			events[i].queue_id = lcore->ev_out_queue;
+		}
+
+		nb_tx = rte_event_enqueue_burst(lcore->ev_id,
+						lcore->ev_port_id,
+						events,
+						nb_rx);
+		
+		if (nb_tx != nb_rx) {
+			RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)",
+				core_id, nb_rx, nb_tx);
+		}
 	}
 
 	RTE_LOG(INFO, USER1, "Worker %u stopping\n", core_id);
+
+	return 0;
+}
+
+static int
+launch_tx(void *arg)
+{
+	struct lcore_params *lcore = (struct lcore_params*) arg;
+	struct rte_event events[DEFAULT_EVENT_BURST];
+	uint16_t core_id = rte_lcore_id();
+	int i, timeout = 0;
+	uint16_t nb_rx;
+
+	RTE_LOG(INFO, USER1, "TX consumer %u starting\n", core_id);
+
+	while(1) {
+		nb_rx = rte_event_dequeue_burst(lcore->ev_id,
+						lcore->ev_port_id,
+						events,
+						DEFAULT_EVENT_BURST,
+						timeout);
+
+		for (i = 0; i < nb_rx; i++) {
+			rte_eth_tx_burst(events[i].sub_event_type,
+					 0,
+					 &events[i].mbuf,
+					 1);
+		}
+	}
+
+	RTE_LOG(INFO, USER1, "TX consumer %u stopping\n", core_id);
 
 	return 0;
 }
@@ -80,9 +179,12 @@ vswitch_init()
 	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
 		config->lcores[core_id].core_id = core_id;
 		config->lcores[core_id].enabled = 0;
+		config->lcores[core_id].ev_id = config->ev_id;
 		config->lcores[core_id].ev_port_id = core_id;
-		config->lcores[core_id].ev_queue_needed = 0;
-		config->lcores[core_id].ev_queue_id = EV_QUEUE_ID_INVALID;
+		config->lcores[core_id].ev_in_queue_needed = 0;
+		config->lcores[core_id].ev_in_queue = EV_QUEUE_ID_INVALID;
+		config->lcores[core_id].ev_out_queue_needed = 0;
+		config->lcores[core_id].ev_out_queue = EV_QUEUE_ID_INVALID;
 	}
 
 	return 0;
@@ -114,26 +216,31 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 		if (stage_config->coremask & (1UL << core_id)) {
 			lcore = &config->lcores[core_id];
 			lcore->enabled = 1;
+			lcore->type = stage_config->queue.type;
 			lcore->ev_port_config.dequeue_depth = 128;
 			lcore->ev_port_config.enqueue_depth = 128;
 			lcore->ev_port_config.new_event_threshold = 4096;
 			config->nb_ports++;
 			switch (stage_config->queue.type) {
+			case STAGE_TYPE_RX:
+				lcore->ev_out_queue_needed = 1;
+				lcore->ev_out_queue = stage_config->queue.out;
+				break;
 			case STAGE_TYPE_WORKER:
-				lcore->ev_queue_needed = 1;
-				lcore->ev_queue_id = stage_config->queue.worker.in;
+				lcore->ev_in_queue_needed = 1;
+				lcore->ev_in_queue = stage_config->queue.in;
+				lcore->ev_out_queue_needed = 1;
+				lcore->ev_out_queue = stage_config->queue.out;
 				break;
 			case STAGE_TYPE_TX:
-				lcore->ev_queue_needed = 1;
-				lcore->ev_queue_id = stage_config->queue.worker.in;
+				lcore->ev_in_queue_needed = 1;
+				lcore->ev_in_queue = stage_config->queue.in;
 				break;
-			case STAGE_TYPE_RX:
 			default:
-				lcore->ev_queue_needed = 0;
 				break;
 			}
 
-			if (lcore->ev_queue_needed) {
+			if (lcore->ev_in_queue_needed) {
 				config->nb_queues++;
 			}
 		}
@@ -147,14 +254,11 @@ stage_configure(__rte_unused struct stage_config *stage_config, __rte_unused voi
 {
 	int rc = 0;
 
-	if (stage_config->queue.type == STAGE_TYPE_WORKER) {
+	if (stage_config->queue.type == STAGE_TYPE_WORKER ||
+	    stage_config->queue.type == STAGE_TYPE_TX) {
 		rc = rte_event_queue_setup(config->ev_id,
-					   stage_config->queue.worker.in,
-					   &stage_config->queue.worker.ev_queue_config);
-	} else if (stage_config->queue.type == STAGE_TYPE_TX) {
-		rc = rte_event_queue_setup(config->ev_id,
-					   stage_config->queue.tx.in,
-					   &stage_config->queue.tx.ev_queue_config);
+					   stage_config->queue.in,
+					   &stage_config->queue.ev_queue_config);
 	}
 
 	return rc;
@@ -203,9 +307,12 @@ vswitch_start()
 			goto err;
 		}
 
+		if (!lcore->ev_in_queue_needed)
+			continue;
+
 		rc = rte_event_port_link(config->ev_id,
 					  lcore->ev_port_id,
-					  &lcore->ev_queue_id,
+					  &lcore->ev_in_queue,
 					  NULL,
 					  1);
 		if (rc < 0) {
@@ -222,7 +329,20 @@ vswitch_start()
 	}
 
 	RTE_LCORE_FOREACH_WORKER(core_id) {
-		rte_eal_remote_launch(launch_worker, NULL, core_id);
+		lcore = &config->lcores[core_id];
+		switch(lcore->type) {
+		case STAGE_TYPE_RX:
+			rte_eal_remote_launch(launch_rx, lcore, core_id);
+			break;
+		case STAGE_TYPE_WORKER:
+			rte_eal_remote_launch(launch_worker, lcore, core_id);
+			break;
+		case STAGE_TYPE_TX:
+			rte_eal_remote_launch(launch_tx, lcore, core_id);
+			break;
+		default:
+			break;
+		}
 	}
 
 	return 0;

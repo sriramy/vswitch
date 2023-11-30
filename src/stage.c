@@ -215,24 +215,18 @@ stage_config_set_queue(char const *name, struct stage_queue_config *config)
 
         if (s) {
 		s->config.queue = *config;
+		ev_queue_config = &s->config.queue.ev_queue_config;
 
 		switch (s->config.queue.type) {
 		case STAGE_TYPE_WORKER:
-			ev_queue_config = &s->config.queue.worker.ev_queue_config;
-			break;
 		case STAGE_TYPE_TX:
-			ev_queue_config = &s->config.queue.tx.ev_queue_config;
-			break;
-		case STAGE_TYPE_RX:
-		default:
-			ev_queue_config = NULL;
-			break;
-		}
-
-		if (ev_queue_config) {
 			ev_queue_config->priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
 			ev_queue_config->nb_atomic_flows = 1024;
 			ev_queue_config->nb_atomic_order_sequences = 1024;
+			break;
+		case STAGE_TYPE_RX:
+		default:
+			break;
 		}
 
                 return 0;

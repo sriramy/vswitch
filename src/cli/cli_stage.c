@@ -85,7 +85,7 @@ cli_stage_set_type_rx(void *parsed_result, struct cmdline *cl, __rte_unused void
 
 	memset(&queue_config, 0, sizeof(queue_config));
 	queue_config.type = STAGE_TYPE_RX;
-	queue_config.rx.out = res->out_qid;
+	queue_config.out = res->out_qid;
 
         rc = stage_config_set_queue(stage_name, &queue_config);
         if (rc < 0) {
@@ -106,9 +106,9 @@ cli_stage_set_type_worker(void *parsed_result, struct cmdline *cl, __rte_unused 
 
 	memset(&queue_config, 0, sizeof(queue_config));
 	queue_config.type = STAGE_TYPE_WORKER;
-	queue_config.worker.in = res->in_qid;
-	queue_config.worker.out = res->out_qid;
-	queue_config.worker.ev_queue_config.schedule_type =
+	queue_config.in = res->in_qid;
+	queue_config.out = res->out_qid;
+	queue_config.ev_queue_config.schedule_type =
 		(strcmp(res->schedule_type, "atomic") == 0) ?
 		RTE_SCHED_TYPE_ATOMIC :
 		RTE_SCHED_TYPE_ORDERED;
@@ -132,8 +132,8 @@ cli_stage_set_type_tx(void *parsed_result, struct cmdline *cl, __rte_unused void
 
 	memset(&queue_config, 0, sizeof(queue_config));
 	queue_config.type = STAGE_TYPE_TX;
-	queue_config.tx.in = res->in_qid;
-	queue_config.worker.ev_queue_config.schedule_type =
+	queue_config.in = res->in_qid;
+	queue_config.ev_queue_config.schedule_type =
 		(strcmp(res->schedule_type, "atomic") == 0) ?
 		RTE_SCHED_TYPE_ATOMIC :
 		RTE_SCHED_TYPE_ORDERED;

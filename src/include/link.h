@@ -14,7 +14,7 @@
 #define ETHDEV_RX_DESC_DEFAULT	(1024)
 #define ETHDEV_TX_DESC_DEFAULT	(1024)
 
-typedef int (*link_map_cb) (uint16_t link_id, uint16_t peer_link_id);
+typedef int (*link_map_cb) (uint16_t link_id, uint16_t peer_link_id, void *data);
 
 struct link_rss_config {
 	uint32_t queue_id[ETHDEV_RXQ_RSS_MAX];
@@ -65,6 +65,6 @@ int link_config_set_mtu(char const *name, uint32_t mtu);
 int link_config_set_peer(char const *name, char const *peer_name);
 
 int link_start();
-int link_map_walk(link_map_cb cb);
+int link_map_walk(link_map_cb cb, void *data);
 
 #endif /* __VSWITCH_SRC_API_LINK_H_ */

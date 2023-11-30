@@ -240,13 +240,13 @@ link_start()
 }
 
 int
-link_map_walk(link_map_cb cb)
+link_map_walk(link_map_cb cb, void *data)
 {
 	struct link *l;
 	int rc = 0;
 
 	TAILQ_FOREACH(l, &link_node, next) {
-		rc = cb(l->config.link_id, l->config.peer.link_id);
+		rc = cb(l->config.link_id, l->config.peer.link_id, data);
 		if (rc < 0) {
 			return rc;
 		}
