@@ -180,7 +180,7 @@ vswitch_init()
 		config->lcores[core_id].core_id = core_id;
 		config->lcores[core_id].enabled = 0;
 		config->lcores[core_id].ev_id = config->ev_id;
-		config->lcores[core_id].ev_port_id = core_id;
+		// config->lcores[core_id].ev_port_id = core_id;
 		config->lcores[core_id].ev_in_queue_needed = 0;
 		config->lcores[core_id].ev_in_queue = EV_QUEUE_ID_INVALID;
 		config->lcores[core_id].ev_out_queue_needed = 0;
@@ -220,7 +220,7 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 			lcore->ev_port_config.dequeue_depth = 128;
 			lcore->ev_port_config.enqueue_depth = 128;
 			lcore->ev_port_config.new_event_threshold = 4096;
-			config->nb_ports++;
+			lcore->ev_port_id = config->nb_ports++;
 			switch (stage_config->queue.type) {
 			case STAGE_TYPE_RX:
 				lcore->ev_out_queue_needed = 1;
