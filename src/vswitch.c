@@ -10,6 +10,7 @@
 #include <rte_eventdev.h>
 #include <rte_malloc.h>
 #include <rte_mbuf.h>
+#include <rte_service.h>
 
 #include "link.h"
 #include "stage.h"
@@ -239,12 +240,12 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 			default:
 				break;
 			}
-
-			if (lcore->ev_in_queue_needed) {
-				config->nb_queues++;
-			}
 		}
 	}
+
+	if (stage_config->queue.type == STAGE_TYPE_WORKER ||
+	    stage_config->queue.type == STAGE_TYPE_TX)
+		config->nb_queues++;
 
 	return 0;
 }
@@ -299,6 +300,15 @@ vswitch_start()
 		if (!lcore->enabled)
 			continue;
 
+		RTE_LOG(INFO, USER1, "Lcore %u config: "
+			"type: %u "
+			"ev_id: %u, ev_port_id: %u "
+			"ev_in_queue: %u ev_out_queue: %u "
+			"\n",
+			core_id, lcore->type,
+			lcore->ev_id, lcore->ev_port_id,
+			lcore->ev_in_queue, lcore->ev_out_queue);
+
 		rc = rte_event_port_setup(config->ev_id,
 					  lcore->ev_port_id,
 					  &lcore->ev_port_config);
@@ -321,6 +331,12 @@ vswitch_start()
 		}
 	}
 
+	rc = rte_event_dev_service_id_get(config->ev_id, &config->ev_service_id);
+	if (rc != -ESRCH && rc != 0) {
+		goto err;
+	}
+	rte_service_runstate_set(config->ev_service_id, 1);
+	rte_service_set_runstate_mapped_check(config->ev_service_id, 0);
 
 	rc = rte_event_dev_start(config->ev_id);
 	if (rc < 0) {

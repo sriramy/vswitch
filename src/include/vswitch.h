@@ -27,6 +27,7 @@ struct vswitch_config {
 	int nb_ports;
 	int nb_queues;
 	int ev_id;
+	int ev_service_id;
 	struct rte_event_dev_info ev_info;
 	struct lcore_params lcores[RTE_MAX_LCORE];
 };
