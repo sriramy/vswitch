@@ -49,9 +49,12 @@ produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
 					lcore->ev_port_id,
 					events,
 					nb_rx);
-	if (nb_tx != nb_rx) {
-		RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)",
+
+	if (nb_rx > 0)
+		RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 			lcore->core_id, nb_rx, nb_tx);
+
+	if (nb_tx != nb_rx) {
 		for(i = nb_tx; i < nb_rx; i++)
 			rte_pktmbuf_free(mbufs[i]);
 		return -EIO;
@@ -104,11 +107,10 @@ launch_worker(void *arg)
 						lcore->ev_port_id,
 						events,
 						nb_rx);
-		
-		if (nb_tx != nb_rx) {
-			RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)",
+
+		if (nb_rx > 0)
+			RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 				core_id, nb_rx, nb_tx);
-		}
 	}
 
 	RTE_LOG(INFO, USER1, "Worker %u stopping\n", core_id);
@@ -140,6 +142,9 @@ launch_tx(void *arg)
 					 &events[i].mbuf,
 					 1);
 		}
+
+		if (nb_rx > 0)
+			RTE_LOG(DEBUG, USER1, "Received %u\n", nb_rx);
 	}
 
 	RTE_LOG(INFO, USER1, "TX consumer %u stopping\n", core_id);

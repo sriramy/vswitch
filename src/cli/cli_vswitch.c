@@ -50,7 +50,7 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 			else
 				cmdline_printf(cl, "Lcore %u disabled\n", core_id);
 		} else {
-			cmdline_printf(cl, "Worker\tlcore %u:\ttype: %s\t"
+			cmdline_printf(cl, "Worker\tlcore %u\ttype: %s\t"
 				"ev_id: %u,\tev_port_id: %u\t"
 				"ev_in_queue: %u\tev_out_queue: %u\n",
 				core_id, stage_type_str[lcore->type],
