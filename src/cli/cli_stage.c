@@ -24,6 +24,8 @@ cli_stage_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
         struct stage_config config;
 	int rc;
 
+	memset(&config, 0, sizeof(config));
+
 	rte_strscpy(config.name, res->name, STAGE_NAME_MAX_LEN);
 	config.name[strlen(res->name)] = '\0';
 	config.coremask = res->mask;

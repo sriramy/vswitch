@@ -27,7 +27,7 @@ produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 	struct lcore_params *lcore = (struct lcore_params*) arg;
 	struct rte_event events[DEFAULT_EVENT_BURST];
 	struct rte_mbuf *mbufs[DEFAULT_PKT_BURST];
-	uint16_t nb_rx, nb_tx;
+	uint16_t nb_rx = 0, nb_tx = 0;
 	int i;
 
 	nb_rx = rte_eth_rx_burst(link_id,
@@ -45,16 +45,17 @@ produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 		events[i].mbuf = mbufs[i];
 	}
 
-	nb_tx = rte_event_enqueue_burst(lcore->ev_id,
-					lcore->ev_port_id,
-					events,
-					nb_rx);
+	if (nb_rx > 0) {
+		nb_tx = rte_event_enqueue_burst(lcore->ev_id,
+				lcore->ev_port_id,
+				events,
+				nb_rx);
 
-	if (nb_rx > 0)
-		RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
+		RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 			lcore->core_id, nb_rx, nb_tx);
-	else
+	} else {
 		rte_pause();
+	}
 
 	if (nb_tx != nb_rx) {
 		for(i = nb_tx; i < nb_rx; i++)
@@ -202,6 +203,7 @@ vswitch_init()
 		config->lcores[core_id].ev_in_queue = EV_QUEUE_ID_INVALID;
 		config->lcores[core_id].ev_out_queue_needed = 0;
 		config->lcores[core_id].ev_out_queue = EV_QUEUE_ID_INVALID;
+		config->lcores[core_id].nb_link_queues = 0;
 	}
 
 	return 0;
@@ -281,6 +283,9 @@ static int
 stage_configure(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
 {
 	int rc = 0;
+
+	if (config->ev_info.event_dev_cap & RTE_EVENT_DEV_CAP_QUEUE_ALL_TYPES)
+		stage_config->ev_queue.config.event_queue_cfg |= RTE_EVENT_QUEUE_CFG_ALL_TYPES;
 
 	if (stage_config->type == STAGE_TYPE_WORKER ||
 	    stage_config->type == STAGE_TYPE_TX) {

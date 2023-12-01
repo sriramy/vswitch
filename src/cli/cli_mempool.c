@@ -28,6 +28,8 @@ cli_mempool_add(void *parsed_result, __rte_unused struct cmdline *cl, __rte_unus
 	struct mempool_config config;
 	int rc;
 
+	memset(&config, 0, sizeof(config));
+
 	rte_strscpy(config.name, res->name, RTE_MEMPOOL_NAMESIZE);
 	config.name[strlen(res->name)] = '\0';
 	config.mbuf_sz = res->mbuf_sz;

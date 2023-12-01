@@ -52,10 +52,12 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 		} else {
 			cmdline_printf(cl, "Worker\tlcore %u\ttype: %s\t"
 				"ev_id: %u,\tev_port_id: %u\t"
-				"ev_in_queue: %u\tev_out_queue: %u\n",
+				"ev_in_queue: %u\tev_out_queue: %u"
+				"nb_link_queues: %u\n",
 				core_id, stage_type_str[lcore->type],
 				lcore->ev_id, lcore->ev_port_id,
-				lcore->ev_in_queue, lcore->ev_out_queue);
+				lcore->ev_in_queue, lcore->ev_out_queue,
+				lcore->nb_link_queues);
 		}
 	}
 }

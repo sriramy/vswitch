@@ -251,6 +251,7 @@ stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_typ
 		switch (s->config.type) {
 		case STAGE_TYPE_WORKER:
 		case STAGE_TYPE_TX:
+			ev_queue_config->event_queue_cfg = 0;
 			ev_queue_config->schedule_type = schedule_type;
 			ev_queue_config->priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
 			ev_queue_config->nb_atomic_flows = 1024;
@@ -300,7 +301,7 @@ stage_config_set_link_queue(char const *name, char const *link_name, uint8_t qid
 				continue;
 
 			if (link_queue_config->link_id == l->config.link_id &&
-			    link_queue_config->queue_id)
+			    link_queue_config->queue_id == qid)
 				return 0;
 		}
 
