@@ -11,6 +11,7 @@
 #include <rte_errno.h>
 #include <rte_malloc.h>
 
+#include "link.h"
 #include "stage.h"
 
 static void *enabled_cores_bitmap = NULL;
@@ -160,7 +161,7 @@ stage_config_add(struct stage_config *config)
 
 	memcpy(&s->config, config, sizeof(*config));
 	if (!stage_get_free_id(&s->config.stage_id)) {
-		rc = -ENOMEM;
+		rc = -ENOBUFS;
 		goto err;
 	}
 
@@ -278,6 +279,48 @@ stage_config_set_ev_queue_out(char const *name, uint8_t qid)
 
         return -ENOENT;
 }
+
+int
+stage_config_set_link_queue(char const *name, char const *link_name, uint8_t qid)
+{
+	struct stage_link_queue_config *link_queue_config;
+        struct stage *s = stage_config_get(name);
+	struct link *l = link_config_get(link_name);
+	int i;
+
+        if (s && l) {
+		// Only valid for RX cores
+		if (s->config.type != STAGE_TYPE_RX)
+			return -EINVAL;
+
+		// Check for duplicate configuration
+		for (i = 0; i < STAGE_MAX_LINK_QUEUES; i++) {
+			link_queue_config = &s->config.link_queue[i];
+			if (!link_queue_config->enabled)
+				continue;
+
+			if (link_queue_config->link_id == l->config.link_id &&
+			    link_queue_config->queue_id)
+				return 0;
+		}
+
+		// Add link configuration 
+		for (i = 0; i < STAGE_MAX_LINK_QUEUES; i++) {
+			link_queue_config = &s->config.link_queue[i];
+			if (!link_queue_config->enabled) {
+				link_queue_config->enabled = 1;
+				link_queue_config->link_id = l->config.link_id;
+				link_queue_config->queue_id = qid;
+				return 0;
+			}
+		}
+
+		return -ENOBUFS;
+        }
+
+        return -ENOENT;
+}
+
 
 int
 stage_config_walk(stage_config_cb cb, void *data)

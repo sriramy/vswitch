@@ -134,6 +134,25 @@ cli_stage_set_queue_out(void *parsed_result, struct cmdline *cl, __rte_unused vo
 			       stage_name, rte_strerror(-rc));
 }
 
+static void
+cli_stage_set_link_queue(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct stage_cmd_tokens *res = parsed_result;
+        char stage_name[STAGE_NAME_MAX_LEN];
+        char link_name[RTE_ETH_NAME_MAX_LEN];
+	int rc = -ENOENT;
+
+	rte_strscpy(stage_name, res->name, STAGE_NAME_MAX_LEN);
+	stage_name[strlen(res->name)] = '\0';
+	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
+	link_name[strlen(res->dev)] = '\0';
+
+        rc = stage_config_set_link_queue(stage_name, link_name, res->in_qid);
+        if (rc < 0)
+                cmdline_printf(cl, "stage set %s input event queue failed: %s\n",
+			       stage_name, rte_strerror(-rc));
+}
+
 cmdline_parse_token_string_t stage_cmd =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, stage, "stage");
 cmdline_parse_token_string_t stage_add =
@@ -168,6 +187,10 @@ cmdline_parse_token_string_t stage_schedule =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule, "schedule");
 cmdline_parse_token_string_t stage_schedule_type =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule_type, "atomic#ordered");
+cmdline_parse_token_string_t stage_link =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, link, "link");
+cmdline_parse_token_string_t stage_dev =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, dev, NULL);
 
 static char const
 cmd_stage_add_help[] = "stage add <stage_name> [coremask <mask>]";
@@ -267,6 +290,25 @@ cmdline_parse_inst_t stage_set_queue_out_cmd_ctx = {
 		(void *)&stage_queue,
 		(void *)&stage_out_queue,
 		(void *)&stage_out_qid,
+		NULL,
+	},
+};
+
+static char const
+cmd_stage_set_link_queue_help[] = "stage set <stage_name> link <name> queue <qid> ";
+
+cmdline_parse_inst_t stage_set_link_queue_cmd_ctx = {
+	.f = cli_stage_set_link_queue,
+	.data = NULL,
+	.help_str = cmd_stage_set_link_queue_help,
+	.tokens = {
+		(void *)&stage_cmd,
+                (void *)&stage_set,
+		(void *)&stage_name,
+		(void *)&stage_link,
+		(void *)&stage_dev,
+		(void *)&stage_queue,
+		(void *)&stage_in_qid,
 		NULL,
 	},
 };

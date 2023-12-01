@@ -254,3 +254,17 @@ link_map_walk(link_map_cb cb, void *data)
 
 	return rc;
 }
+
+int
+link_get_peer(uint16_t link_id, uint16_t *peer_link_id)
+{
+	struct link *l;
+	int rc = -ENOENT;
+
+	TAILQ_FOREACH(l, &link_node, next) {
+		if (l->config.link_id == link_id)
+			*peer_link_id = l->config.peer.link_id;
+	}
+
+	return rc;
+}

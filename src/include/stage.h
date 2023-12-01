@@ -22,7 +22,9 @@ enum {
 };
 
 struct stage_link_queue_config {
-
+	uint8_t enabled;
+	uint8_t link_id;
+	uint8_t queue_id;
 };
 
 struct stage_ev_queue_config {
@@ -36,7 +38,6 @@ struct stage_config {
 	uint32_t stage_id;
 	uint32_t coremask;
 	uint8_t type;
-	uint8_t nb_link_queues;
 	struct stage_link_queue_config link_queue[STAGE_MAX_LINK_QUEUES];
 	struct stage_ev_queue_config ev_queue;
 };
@@ -62,6 +63,7 @@ int stage_config_rem(char const *name);
 int stage_config_set_type(char const *name, uint8_t type);
 int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type);
 int stage_config_set_ev_queue_out(char const *name, uint8_t qid);
+int stage_config_set_link_queue(char const *name, char const *link_name, uint8_t qid);
 
 int stage_config_walk(stage_config_cb cb, void *data);
 

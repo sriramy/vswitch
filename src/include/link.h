@@ -59,6 +59,7 @@ struct rte_eth_conf *link_config_default_get();
 struct link *link_config_get(char const *name);
 int link_config_add(struct link_config *l);
 int link_config_rem(char const *name);
+int link_get_peer(uint16_t link_id, uint16_t *peer_link_id);
 
 int link_config_set_promiscuous(char const *name, bool enable);
 int link_config_set_mtu(char const *name, uint32_t mtu);

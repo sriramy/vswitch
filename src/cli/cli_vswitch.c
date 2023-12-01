@@ -38,8 +38,8 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 	cmdline_printf(cl, "  Event device,\tid: %d, \tdriver: %s\n",
 			config->ev_id,
 			config->ev_info.driver_name);
-	cmdline_printf(cl, "  Number of ports:\t%d\n", config->nb_ports);
-	cmdline_printf(cl, "  Number of queues:\t%d\n", config->nb_queues);
+	cmdline_printf(cl, "  Number of event ports:\t%d\n", config->nb_ports);
+	cmdline_printf(cl, "  Number of event queues:\t%d\n", config->nb_queues);
 	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
 		lcore = &config->lcores[core_id];
 		if (!lcore->enabled) {

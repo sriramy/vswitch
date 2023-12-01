@@ -22,7 +22,7 @@
 static struct vswitch_config *config = NULL;
 
 int
-produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
+produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 {
 	struct lcore_params *lcore = (struct lcore_params*) arg;
 	struct rte_event events[DEFAULT_EVENT_BURST];
@@ -31,7 +31,7 @@ produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
 	int i;
 
 	nb_rx = rte_eth_rx_burst(link_id,
-				 0,
+				 queue_id,
 				 mbufs,
 				 DEFAULT_PKT_BURST);
 	for (i = 0; i < nb_rx; i++) {
@@ -40,7 +40,7 @@ produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
 		events[i].sched_type = lcore->type;
 		events[i].queue_id = lcore->ev_out_queue;
 		events[i].event_type = RTE_EVENT_TYPE_ETHDEV;
-		events[i].sub_event_type = peer_link_id;
+		events[i].sub_event_type = link_id;
 		events[i].priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
 		events[i].mbuf = mbufs[i];
 	}
@@ -70,11 +70,16 @@ launch_rx(void *arg)
 {
 	struct lcore_params *lcore = (struct lcore_params*) arg;
 	uint16_t core_id = rte_lcore_id();
+	int i;
 
 	RTE_LOG(INFO, USER1, "RX producer %u starting\n", core_id);
 
 	while(1) {
-		link_map_walk(produce_pkts, lcore);
+		for (i = 0; i < lcore->nb_link_queues; i++) {
+			produce_pkts(lcore->link_queues[i].link_id,
+				     lcore->link_queues[i].queue_id,
+				     arg);
+		}
 	}
 
 	RTE_LOG(INFO, USER1, "RX producer %u stopping\n", core_id);
@@ -221,8 +226,10 @@ vswitch_config_get()
 static int
 stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
 {
+	struct stage_link_queue_config *qconf;
 	struct lcore_params *lcore;
 	uint16_t core_id;
+	int i;
 
 	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
 		if (stage_config->coremask & (1UL << core_id)) {
@@ -250,6 +257,15 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 				break;
 			default:
 				break;
+			}
+
+			for (i = 0; i < STAGE_MAX_LINK_QUEUES; i++) {
+				qconf = &stage_config->link_queue[i];
+				if (!qconf->enabled)
+					continue;
+				lcore->link_queues[lcore->nb_link_queues].link_id = qconf->link_id;
+				lcore->link_queues[lcore->nb_link_queues].queue_id = qconf->queue_id;
+				lcore->nb_link_queues++;
 			}
 		}
 	}

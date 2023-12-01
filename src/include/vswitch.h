@@ -10,6 +10,11 @@
 
 #define EV_QUEUE_ID_INVALID	(0xFF)
 
+struct link_queues {
+	uint16_t link_id;
+	uint8_t queue_id;
+};
+
 struct lcore_params {
 	uint16_t core_id;
 	uint16_t enabled;
@@ -21,6 +26,11 @@ struct lcore_params {
 	uint8_t ev_out_queue_needed;
 	uint8_t ev_out_queue;
 	struct rte_event_port_conf ev_port_config;
+	uint8_t nb_link_queues;
+	struct {
+		uint16_t link_id;
+		uint8_t queue_id;
+	} link_queues[STAGE_MAX_LINK_QUEUES];
 } __rte_cache_aligned;
 
 struct vswitch_config {
