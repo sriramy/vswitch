@@ -53,6 +53,8 @@ produce_pkts(uint16_t link_id, uint16_t peer_link_id, void *arg)
 	if (nb_rx > 0)
 		RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 			lcore->core_id, nb_rx, nb_tx);
+	else
+		rte_pause();
 
 	if (nb_tx != nb_rx) {
 		for(i = nb_tx; i < nb_rx; i++)
@@ -111,6 +113,8 @@ launch_worker(void *arg)
 		if (nb_rx > 0)
 			RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 				core_id, nb_rx, nb_tx);
+		else
+			rte_pause();
 	}
 
 	RTE_LOG(INFO, USER1, "Worker %u stopping\n", core_id);
@@ -145,6 +149,8 @@ launch_tx(void *arg)
 
 		if (nb_rx > 0)
 			RTE_LOG(DEBUG, USER1, "Received %u\n", nb_rx);
+		else
+			rte_pause();
 	}
 
 	RTE_LOG(INFO, USER1, "TX consumer %u stopping\n", core_id);
@@ -222,25 +228,25 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 		if (stage_config->coremask & (1UL << core_id)) {
 			lcore = &config->lcores[core_id];
 			lcore->enabled = 1;
-			lcore->type = stage_config->queue.type;
+			lcore->type = stage_config->type;
 			lcore->ev_port_config.dequeue_depth = 128;
 			lcore->ev_port_config.enqueue_depth = 128;
 			lcore->ev_port_config.new_event_threshold = 4096;
 			lcore->ev_port_id = config->nb_ports++;
-			switch (stage_config->queue.type) {
+			switch (stage_config->type) {
 			case STAGE_TYPE_RX:
 				lcore->ev_out_queue_needed = 1;
-				lcore->ev_out_queue = stage_config->queue.out;
+				lcore->ev_out_queue = stage_config->ev_queue.out;
 				break;
 			case STAGE_TYPE_WORKER:
 				lcore->ev_in_queue_needed = 1;
-				lcore->ev_in_queue = stage_config->queue.in;
+				lcore->ev_in_queue = stage_config->ev_queue.in;
 				lcore->ev_out_queue_needed = 1;
-				lcore->ev_out_queue = stage_config->queue.out;
+				lcore->ev_out_queue = stage_config->ev_queue.out;
 				break;
 			case STAGE_TYPE_TX:
 				lcore->ev_in_queue_needed = 1;
-				lcore->ev_in_queue = stage_config->queue.in;
+				lcore->ev_in_queue = stage_config->ev_queue.in;
 				break;
 			default:
 				break;
@@ -248,8 +254,8 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 		}
 	}
 
-	if (stage_config->queue.type == STAGE_TYPE_WORKER ||
-	    stage_config->queue.type == STAGE_TYPE_TX)
+	if (stage_config->type == STAGE_TYPE_WORKER ||
+	    stage_config->type == STAGE_TYPE_TX)
 		config->nb_queues++;
 
 	return 0;
@@ -260,11 +266,11 @@ stage_configure(__rte_unused struct stage_config *stage_config, __rte_unused voi
 {
 	int rc = 0;
 
-	if (stage_config->queue.type == STAGE_TYPE_WORKER ||
-	    stage_config->queue.type == STAGE_TYPE_TX) {
+	if (stage_config->type == STAGE_TYPE_WORKER ||
+	    stage_config->type == STAGE_TYPE_TX) {
 		rc = rte_event_queue_setup(config->ev_id,
-					   stage_config->queue.in,
-					   &stage_config->queue.ev_queue_config);
+					   stage_config->ev_queue.in,
+					   &stage_config->ev_queue.config);
 	}
 
 	return rc;

@@ -40,9 +40,9 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&stage_add_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_rem_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_show_cmd_ctx,
-	(cmdline_parse_inst_t *)&stage_set_type_rx_cmd_ctx,
-	(cmdline_parse_inst_t *)&stage_set_type_worker_cmd_ctx,
-	(cmdline_parse_inst_t *)&stage_set_type_tx_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_type_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_queue_in_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_queue_out_cmd_ctx,
 
 	(cmdline_parse_inst_t *)&vswitch_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&vswitch_start_cmd_ctx,

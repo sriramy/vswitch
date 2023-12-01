@@ -216,18 +216,41 @@ stage_config_rem(char const *name)
 }
 
 int
-stage_config_set_queue(char const *name, struct stage_queue_config *config)
+stage_config_set_type(char const *name, uint8_t type)
+{
+        struct stage *s = stage_config_get(name);
+
+        if (s) {
+		switch (type) {
+		case STAGE_TYPE_WORKER:
+		case STAGE_TYPE_TX:
+		case STAGE_TYPE_RX:
+			s->config.type = type;
+			break;
+		default:
+			return -EINVAL;
+		}
+
+                return 0;
+        }
+
+        return -ENOENT;
+}
+
+int
+stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type)
 {
 	struct rte_event_queue_conf *ev_queue_config;
         struct stage *s = stage_config_get(name);
 
         if (s) {
-		s->config.queue = *config;
-		ev_queue_config = &s->config.queue.ev_queue_config;
+		s->config.ev_queue.in = qid;
+		ev_queue_config = &s->config.ev_queue.config;
 
-		switch (s->config.queue.type) {
+		switch (s->config.type) {
 		case STAGE_TYPE_WORKER:
 		case STAGE_TYPE_TX:
+			ev_queue_config->schedule_type = schedule_type;
 			ev_queue_config->priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
 			ev_queue_config->nb_atomic_flows = 1024;
 			ev_queue_config->nb_atomic_order_sequences = 1024;
@@ -237,6 +260,19 @@ stage_config_set_queue(char const *name, struct stage_queue_config *config)
 			break;
 		}
 
+                return 0;
+        }
+
+        return -ENOENT;
+}
+
+int
+stage_config_set_ev_queue_out(char const *name, uint8_t qid)
+{
+        struct stage *s = stage_config_get(name);
+
+        if (s) {
+		s->config.ev_queue.out = qid;
                 return 0;
         }
 

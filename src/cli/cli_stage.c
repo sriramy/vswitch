@@ -27,7 +27,7 @@ cli_stage_add(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 	rte_strscpy(config.name, res->name, STAGE_NAME_MAX_LEN);
 	config.name[strlen(res->name)] = '\0';
 	config.coremask = res->mask;
-	config.queue.type = STAGE_TYPE_MAX;
+	config.type = STAGE_TYPE_MAX;
 
 	rc = stage_config_add(&config);
 	if (rc < 0) {
@@ -73,75 +73,65 @@ cli_stage_show(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 }
 
 static void
-cli_stage_set_type_rx(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+cli_stage_set_type(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
-	struct stage_queue_config queue_config;
         char stage_name[STAGE_NAME_MAX_LEN];
+	uint8_t stage_type = STAGE_TYPE_MAX;
 	int rc = -ENOENT;
 
 	rte_strscpy(stage_name, res->name, STAGE_NAME_MAX_LEN);
 	stage_name[strlen(res->name)] = '\0';
 
-	memset(&queue_config, 0, sizeof(queue_config));
-	queue_config.type = STAGE_TYPE_RX;
-	queue_config.out = res->out_qid;
+	if (strcmp(res->stage_type, "rx") == 0)
+		stage_type = STAGE_TYPE_RX;
+	else if (strcmp(res->stage_type, "worker") == 0)
+		stage_type = STAGE_TYPE_WORKER;
+	else if (strcmp(res->stage_type, "tx") == 0)
+		stage_type = STAGE_TYPE_TX;
 
-        rc = stage_config_set_queue(stage_name, &queue_config);
-        if (rc < 0) {
-                cmdline_printf(cl, "stage show %s failed: %s\n", stage_name, rte_strerror(-rc));
-        }
+	rc = stage_config_set_type(stage_name, stage_type);
+	if (rc < 0) {
+		cmdline_printf(cl, "stage set %s type %s failed: %s\n",
+			       stage_name, res->stage_type, rte_strerror(-rc));
+	}
 }
 
 static void
-cli_stage_set_type_worker(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+cli_stage_set_queue_in(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
-	struct stage_queue_config queue_config;
         char stage_name[STAGE_NAME_MAX_LEN];
 	int rc = -ENOENT;
 
 	rte_strscpy(stage_name, res->name, STAGE_NAME_MAX_LEN);
 	stage_name[strlen(res->name)] = '\0';
 
-	memset(&queue_config, 0, sizeof(queue_config));
-	queue_config.type = STAGE_TYPE_WORKER;
-	queue_config.in = res->in_qid;
-	queue_config.out = res->out_qid;
-	queue_config.ev_queue_config.schedule_type =
-		(strcmp(res->schedule_type, "atomic") == 0) ?
-		RTE_SCHED_TYPE_ATOMIC :
-		RTE_SCHED_TYPE_ORDERED;
-
-        rc = stage_config_set_queue(stage_name, &queue_config);
-        if (rc < 0) {
-                cmdline_printf(cl, "stage set %s failed: %s\n", stage_name, rte_strerror(-rc));
-        }
+        rc = stage_config_set_ev_queue_in(stage_name,
+					  res->in_qid,
+					  (strcmp(res->schedule_type, "atomic") == 0) ?
+						RTE_SCHED_TYPE_ATOMIC :
+					  	RTE_SCHED_TYPE_ORDERED);
+        if (rc < 0)
+                cmdline_printf(cl, "stage set %s input event queue failed: %s\n",
+			       stage_name, rte_strerror(-rc));
 }
 
 static void
-cli_stage_set_type_tx(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+cli_stage_set_queue_out(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
-	struct stage_queue_config queue_config;
         char stage_name[STAGE_NAME_MAX_LEN];
 	int rc = -ENOENT;
 
 	rte_strscpy(stage_name, res->name, STAGE_NAME_MAX_LEN);
 	stage_name[strlen(res->name)] = '\0';
 
-	memset(&queue_config, 0, sizeof(queue_config));
-	queue_config.type = STAGE_TYPE_TX;
-	queue_config.in = res->in_qid;
-	queue_config.ev_queue_config.schedule_type =
-		(strcmp(res->schedule_type, "atomic") == 0) ?
-		RTE_SCHED_TYPE_ATOMIC :
-		RTE_SCHED_TYPE_ORDERED;
-
-        rc = stage_config_set_queue(stage_name, &queue_config);
-        if (rc < 0) {
-                cmdline_printf(cl, "stage set %s failed: %s\n", stage_name, rte_strerror(-rc));
-        }
+        rc = stage_config_set_ev_queue_out(stage_name,
+					  res->out_qid);
+        if (rc < 0)
+                cmdline_printf(cl, "stage set %s output event queue failed: %s\n",
+			       stage_name, rte_strerror(-rc));
 }
 
 cmdline_parse_token_string_t stage_cmd =
@@ -160,20 +150,18 @@ cmdline_parse_token_string_t stage_coremask =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, coremask, "coremask");
 cmdline_parse_token_num_t stage_mask =
 	TOKEN_NUM_INITIALIZER(struct stage_cmd_tokens, mask, RTE_UINT32);
+cmdline_parse_token_string_t stage_type =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, type, "type");
 cmdline_parse_token_string_t stage_stage_type =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, stage_type, "type");
-cmdline_parse_token_string_t stage_type_rx =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, type, "rx");
-cmdline_parse_token_string_t stage_type_worker =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, type, "worker");
-cmdline_parse_token_string_t stage_type_tx =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, type, "tx");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, stage_type, "rx#worker#tx");
+cmdline_parse_token_string_t stage_queue =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, stage_queue, "queue");
 cmdline_parse_token_string_t stage_in_queue =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, in_queue, "in_queue");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, in_queue, "in");
 cmdline_parse_token_num_t stage_in_qid =
 	TOKEN_NUM_INITIALIZER(struct stage_cmd_tokens, in_qid, RTE_UINT32);
 cmdline_parse_token_string_t stage_out_queue =
-	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, out_queue, "out_queue");
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, out_queue, "out");
 cmdline_parse_token_num_t stage_out_qid =
 	TOKEN_NUM_INITIALIZER(struct stage_cmd_tokens, out_qid, RTE_UINT32);
 cmdline_parse_token_string_t stage_schedule =
@@ -229,41 +217,36 @@ cmdline_parse_inst_t stage_show_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_type_rx_help[] = "stage set <stage_name> type rx out_queue <out_qid>";
+cmd_stage_set_type_help[] = "stage set <stage_name> type rx#worker#tx";
 
-cmdline_parse_inst_t stage_set_type_rx_cmd_ctx = {
-	.f = cli_stage_set_type_rx,
+cmdline_parse_inst_t stage_set_type_cmd_ctx = {
+	.f = cli_stage_set_type,
 	.data = NULL,
-	.help_str = cmd_stage_set_type_rx_help,
+	.help_str = cmd_stage_set_type_help,
 	.tokens = {
 		(void *)&stage_cmd,
                 (void *)&stage_set,
 		(void *)&stage_name,
+		(void *)&stage_type,
 		(void *)&stage_stage_type,
-		(void *)&stage_type_rx,
-		(void *)&stage_out_queue,
-		(void *)&stage_out_qid,
 		NULL,
 	},
 };
 
 static char const
-cmd_stage_set_type_worker_help[] = "stage set <stage_name> type worker in_queue <in_qid> out_queue <out_qid> schedule <atomic#ordered>";
+cmd_stage_set_queue_in_help[] = "stage set <stage_name> queue in <qid> schedule <atomic#ordered>";
 
-cmdline_parse_inst_t stage_set_type_worker_cmd_ctx = {
-	.f = cli_stage_set_type_worker,
+cmdline_parse_inst_t stage_set_queue_in_cmd_ctx = {
+	.f = cli_stage_set_queue_in,
 	.data = NULL,
-	.help_str = cmd_stage_set_type_worker_help,
+	.help_str = cmd_stage_set_queue_in_help,
 	.tokens = {
 		(void *)&stage_cmd,
                 (void *)&stage_set,
 		(void *)&stage_name,
-		(void *)&stage_stage_type,
-		(void *)&stage_type_worker,
+		(void *)&stage_queue,
 		(void *)&stage_in_queue,
 		(void *)&stage_in_qid,
-		(void *)&stage_out_queue,
-		(void *)&stage_out_qid,
 		(void *)&stage_schedule,
 		(void *)&stage_schedule_type,
 		NULL,
@@ -271,22 +254,19 @@ cmdline_parse_inst_t stage_set_type_worker_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_type_tx_help[] = "stage set <stage_name> type tx in_queue <in_qid> schedule <atomic#ordered>";
+cmd_stage_set_queue_out_help[] = "stage set <stage_name> queue out <qid> ";
 
-cmdline_parse_inst_t stage_set_type_tx_cmd_ctx = {
-	.f = cli_stage_set_type_tx,
+cmdline_parse_inst_t stage_set_queue_out_cmd_ctx = {
+	.f = cli_stage_set_queue_out,
 	.data = NULL,
-	.help_str = cmd_stage_set_type_tx_help,
+	.help_str = cmd_stage_set_queue_out_help,
 	.tokens = {
 		(void *)&stage_cmd,
                 (void *)&stage_set,
 		(void *)&stage_name,
-		(void *)&stage_stage_type,
-		(void *)&stage_type_tx,
-		(void *)&stage_in_queue,
-		(void *)&stage_in_qid,
-		(void *)&stage_schedule,
-		(void *)&stage_schedule_type,
+		(void *)&stage_queue,
+		(void *)&stage_out_queue,
+		(void *)&stage_out_qid,
 		NULL,
 	},
 };

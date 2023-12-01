@@ -10,6 +10,7 @@
 
 #define STAGE_NAME_MAX_LEN	(64)
 #define STAGE_MAX		(16)
+#define STAGE_MAX_LINK_QUEUES	(8)
 
 extern const char *stage_type_str[];
 
@@ -20,18 +21,24 @@ enum {
 	STAGE_TYPE_MAX
 };
 
-struct stage_queue_config {
-	uint8_t type;
+struct stage_link_queue_config {
+
+};
+
+struct stage_ev_queue_config {
 	uint8_t in;
 	uint8_t out;
-	struct rte_event_queue_conf ev_queue_config;
+	struct rte_event_queue_conf config;
 };
 
 struct stage_config {
 	char name[STAGE_NAME_MAX_LEN];
 	uint32_t stage_id;
 	uint32_t coremask;
-	struct stage_queue_config queue;
+	uint8_t type;
+	uint8_t nb_link_queues;
+	struct stage_link_queue_config link_queue[STAGE_MAX_LINK_QUEUES];
+	struct stage_ev_queue_config ev_queue;
 };
 
 struct stage {
@@ -52,7 +59,10 @@ struct stage* stage_config_get(char const *name);
 int stage_config_add(struct stage_config *config);
 int stage_config_rem(char const *name);
 
-int stage_config_set_queue(char const *name, struct stage_queue_config *config);
+int stage_config_set_type(char const *name, uint8_t type);
+int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type);
+int stage_config_set_ev_queue_out(char const *name, uint8_t qid);
+
 int stage_config_walk(stage_config_cb cb, void *data);
 
 #endif /* __VSWITCH_SRC_API_STAGE_H_ */
