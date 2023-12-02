@@ -51,7 +51,7 @@ produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 				events,
 				nb_rx);
 
-		RTE_LOG(INFO, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
+		RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u). transmitted (%u)\n",
 			lcore->core_id, nb_rx, nb_tx);
 	} else {
 		rte_pause();
@@ -135,7 +135,7 @@ launch_tx(void *arg)
 	struct rte_event events[DEFAULT_EVENT_BURST];
 	uint16_t core_id = rte_lcore_id();
 	int i, timeout = 0;
-	uint16_t nb_rx;
+	uint16_t nb_rx, peer_link_id;
 
 	RTE_LOG(INFO, USER1, "TX consumer %u starting\n", core_id);
 
@@ -147,14 +147,15 @@ launch_tx(void *arg)
 						timeout);
 
 		for (i = 0; i < nb_rx; i++) {
-			rte_eth_tx_burst(events[i].sub_event_type,
-					 0,
-					 &events[i].mbuf,
-					 1);
+			if (link_get_peer(events[i].sub_event_type, &peer_link_id))
+				rte_eth_tx_burst(peer_link_id,
+						0,
+						&events[i].mbuf,
+						1);
 		}
 
 		if (nb_rx > 0)
-			RTE_LOG(DEBUG, USER1, "Received %u\n", nb_rx);
+			RTE_LOG(DEBUG, USER1, "Core (%u) Received (%u)\n", core_id, nb_rx);
 		else
 			rte_pause();
 	}
