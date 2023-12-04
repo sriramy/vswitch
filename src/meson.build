@@ -18,6 +18,7 @@ sources = files(
 )
 
 subdir('cli')
+subdir('lib')
 includes = include_directories('include')
 
 deps += [dependency('threads')]
