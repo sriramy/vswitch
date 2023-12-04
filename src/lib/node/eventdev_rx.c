@@ -22,6 +22,8 @@ static struct eventdev_rx_node_list node_list = {
 	.head = NULL,
 };
 
+static struct eventdev_rx_node_item* eventdev_rx_node_data_get(rte_node_t node_id);
+
 int
 eventdev_rx_node_data_add_next_node(rte_node_t id, const char *edge_name) {
 	struct eventdev_rx_node_item *item;
@@ -101,7 +103,7 @@ eventdev_rx_node_data_rem(rte_node_t node_id)
 	return 0;
 }
 
-struct eventdev_rx_node_item*
+static struct eventdev_rx_node_item*
 eventdev_rx_node_data_get(rte_node_t node_id)
 {
 	struct eventdev_rx_node_item *item = node_list.head;

@@ -9,4 +9,5 @@ endif
 
 sources += files(
         'node/eventdev_rx.c',
+        'node/eventdev_tx.c',
 )
