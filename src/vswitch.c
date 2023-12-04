@@ -227,7 +227,7 @@ vswitch_config_get()
 }
 
 static int
-stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
+stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
 {
 	struct stage_link_queue_config *qconf;
 	struct lcore_params *lcore;
@@ -281,7 +281,7 @@ stage_info_get(__rte_unused struct stage_config *stage_config, __rte_unused void
 }
 
 static int
-stage_configure(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
+stage_configure_in_queues(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
 {
 	int rc = 0;
 
@@ -309,8 +309,8 @@ vswitch_start()
 	// Start all links
 	link_start();
 
-	// Fetch configuration from all stages
-	stage_config_walk(stage_info_get, config);
+	// Fetch all stage per-lcore configuration
+	stage_config_walk(stage_get_lcore_config, config);
 
 	memset(&ev_config, 0, sizeof(ev_config));
 	ev_config.nb_event_queues = config->nb_queues;
@@ -325,8 +325,8 @@ vswitch_start()
 		goto err;
 	}
 
-	// Configure all stages
-	stage_config_walk(stage_configure, config);
+	// Configure all stage input queues
+	stage_config_walk(stage_configure_in_queues, config);
 
 	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
 		lcore = &config->lcores[core_id];
