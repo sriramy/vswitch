@@ -19,7 +19,10 @@ sources = files(
 
 subdir('cli')
 subdir('lib')
-includes = include_directories('include')
+includes = include_directories(
+    'include',
+    'lib',
+)
 
 deps += [dependency('threads')]
 deps += [dependency('numa', required: true)]

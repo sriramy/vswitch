@@ -8,6 +8,8 @@
 
 #include <rte_graph.h>
 
+struct eventdev_rx_node_ctx;
+
 rte_node_t eventdev_rx_node_clone(const char *name);
 
 int eventdev_rx_node_data_add(rte_node_t node_id, struct eventdev_rx_node_ctx ctx);

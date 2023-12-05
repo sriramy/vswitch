@@ -10,11 +10,13 @@
 #include <rte_eventdev.h>
 #include <rte_malloc.h>
 #include <rte_mbuf.h>
+#include <rte_node_eth_api.h>
 #include <rte_service.h>
 
 #include "link.h"
 #include "stage.h"
 #include "vswitch.h"
+#include "node/eventdev_tx.h"
 
 #define DEFAULT_PKT_BURST (32)
 #define DEFAULT_EVENT_BURST (32)
@@ -40,7 +42,7 @@ produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 		events[i].sched_type = lcore->type;
 		events[i].queue_id = lcore->ev_out_queue;
 		events[i].event_type = RTE_EVENT_TYPE_ETHDEV;
-		events[i].sub_event_type = link_id;
+		events[i].sub_event_type = 0;
 		events[i].priority = RTE_EVENT_DEV_PRIORITY_NORMAL;
 		events[i].mbuf = mbufs[i];
 	}
@@ -76,9 +78,9 @@ launch_rx(void *arg)
 	RTE_LOG(INFO, USER1, "RX producer %u starting\n", core_id);
 
 	while(1) {
-		for (i = 0; i < lcore->nb_link_queues; i++) {
-			produce_pkts(lcore->link_queues[i].link_id,
-				     lcore->link_queues[i].queue_id,
+		for (i = 0; i < lcore->nb_link_in_queues; i++) {
+			produce_pkts(lcore->link_in_queues[i].link_id,
+				     lcore->link_in_queues[i].queue_id,
 				     arg);
 		}
 	}
@@ -147,7 +149,7 @@ launch_tx(void *arg)
 						timeout);
 
 		for (i = 0; i < nb_rx; i++) {
-			if (link_get_peer(events[i].sub_event_type, &peer_link_id))
+			if (link_get_peer(events[i].mbuf->port, &peer_link_id))
 				rte_eth_tx_burst(peer_link_id,
 						0,
 						&events[i].mbuf,
@@ -204,7 +206,8 @@ vswitch_init()
 		config->lcores[core_id].ev_in_queue = EV_QUEUE_ID_INVALID;
 		config->lcores[core_id].ev_out_queue_needed = 0;
 		config->lcores[core_id].ev_out_queue = EV_QUEUE_ID_INVALID;
-		config->lcores[core_id].nb_link_queues = 0;
+		config->lcores[core_id].nb_link_in_queues = 0;
+		config->lcores[core_id].nb_link_out_queues = 0;
 	}
 
 	return 0;
@@ -263,12 +266,20 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 			}
 
 			for (i = 0; i < STAGE_MAX_LINK_QUEUES; i++) {
-				qconf = &stage_config->link_queue[i];
+				qconf = &stage_config->link_in_queue[i];
 				if (!qconf->enabled)
 					continue;
-				lcore->link_queues[lcore->nb_link_queues].link_id = qconf->link_id;
-				lcore->link_queues[lcore->nb_link_queues].queue_id = qconf->queue_id;
-				lcore->nb_link_queues++;
+				lcore->link_in_queues[lcore->nb_link_in_queues].link_id = qconf->link_id;
+				lcore->link_in_queues[lcore->nb_link_in_queues].queue_id = qconf->queue_id;
+				lcore->nb_link_in_queues++;
+			}
+			for (i = 0; i < STAGE_MAX_LINK_QUEUES; i++) {
+				qconf = &stage_config->link_out_queue[i];
+				if (!qconf->enabled)
+					continue;
+				lcore->link_out_queues[lcore->nb_link_out_queues].link_id = qconf->link_id;
+				lcore->link_out_queues[lcore->nb_link_out_queues].queue_id = qconf->queue_id;
+				lcore->nb_link_out_queues++;
 			}
 		}
 	}
@@ -281,7 +292,7 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 }
 
 static int
-stage_configure_in_queues(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
+stage_configure_input_queues(__rte_unused struct stage_config *stage_config, __rte_unused void *data)
 {
 	int rc = 0;
 
@@ -301,10 +312,15 @@ stage_configure_in_queues(__rte_unused struct stage_config *stage_config, __rte_
 int
 vswitch_start()
 {
+	struct rte_node_ethdev_rx_config rx_config;
+	struct rte_node_ethdev_tx_config tx_config;
 	struct rte_event_dev_config ev_config;
+	char node_name[RTE_NODE_NAMESIZE];
 	struct lcore_params *lcore;
+	rte_node_t node_id;
 	uint16_t core_id;
 	int rc = -EINVAL;
+	int i;
 
 	// Start all links
 	link_start();
@@ -326,7 +342,7 @@ vswitch_start()
 	}
 
 	// Configure all stage input queues
-	stage_config_walk(stage_configure_in_queues, config);
+	stage_config_walk(stage_configure_input_queues, config);
 
 	for (core_id = 0; core_id < RTE_MAX_LCORE; core_id++) {
 		lcore = &config->lcores[core_id];
@@ -341,17 +357,53 @@ vswitch_start()
 			goto err;
 		}
 
-		if (!lcore->ev_in_queue_needed)
-			continue;
+		if (lcore->ev_in_queue_needed) {
+			rc = rte_event_port_link(config->ev_id,
+						lcore->ev_port_id,
+						&lcore->ev_in_queue,
+						NULL,
+						1);
+			if (rc < 0) {
+				rc = -rte_errno;
+				goto err;
+			}
 
-		rc = rte_event_port_link(config->ev_id,
-					  lcore->ev_port_id,
-					  &lcore->ev_in_queue,
-					  NULL,
-					  1);
-		if (rc < 0) {
-			rc = -rte_errno;
-			goto err;
+			for (i = 0; i < lcore->nb_link_out_queues; i++) {
+				tx_config.link_id = lcore->link_out_queues[i].link_id;
+				tx_config.queue_id = lcore->link_out_queues[i].queue_id;
+				strncpy(tx_config.next_node, node_name, sizeof(tx_config.next_node));
+				rte_node_ethdev_tx_config(&tx_config);
+			}
+
+		}
+
+		if (lcore->ev_out_queue_needed) {
+			snprintf(node_name, sizeof(node_name), 
+				"%u-%u", lcore->ev_port_id, lcore->ev_out_queue);
+			node_id = eventdev_tx_node_clone(node_name);
+			if (node_id == RTE_NODE_ID_INVALID) {
+				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) create failed\n", node_name);
+				continue;
+			}
+
+			rc = eventdev_tx_node_data_add(node_id,
+						  lcore->ev_id,
+						  lcore->ev_port_id,
+						  RTE_EVENT_OP_NEW,
+						  lcore->type,
+						  lcore->ev_out_queue,
+						  RTE_EVENT_TYPE_ETHDEV,
+						  0,
+						  RTE_EVENT_DEV_PRIORITY_NORMAL);
+			if (rc < 0)
+				goto err;
+
+			for (i = 0; i < lcore->nb_link_in_queues; i++) {
+				rx_config.link_id = lcore->link_in_queues[i].link_id;
+				rx_config.queue_id = lcore->link_in_queues[i].queue_id;
+				strncpy(rx_config.next_node, node_name, sizeof(rx_config.next_node));
+				rte_node_ethdev_rx_config(&rx_config);
+			}
 		}
 	}
 

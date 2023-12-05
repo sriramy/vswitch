@@ -7,6 +7,7 @@
 #define __VSWITCH_SRC_API_VSWITCH_H_
 
 #include <rte_eventdev.h>
+#include <rte_graph.h>
 
 #define EV_QUEUE_ID_INVALID	(0xFF)
 
@@ -26,11 +27,21 @@ struct lcore_params {
 	uint8_t ev_out_queue_needed;
 	uint8_t ev_out_queue;
 	struct rte_event_port_conf ev_port_config;
-	uint8_t nb_link_queues;
+	uint8_t nb_link_in_queues;
+	uint8_t nb_link_out_queues;
 	struct {
 		uint16_t link_id;
 		uint8_t queue_id;
-	} link_queues[STAGE_MAX_LINK_QUEUES];
+	} link_in_queues[STAGE_MAX_LINK_QUEUES];
+	struct {
+		uint16_t link_id;
+		uint8_t queue_id;
+	} link_out_queues[STAGE_MAX_LINK_QUEUES];
+
+	struct rte_graph *graph;
+	char graph_name[RTE_GRAPH_NAMESIZE];
+	rte_graph_t graph_id;
+
 } __rte_cache_aligned;
 
 struct vswitch_config {

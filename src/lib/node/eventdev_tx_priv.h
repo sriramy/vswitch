@@ -23,7 +23,6 @@ struct eventdev_tx_node_ctx {
         uint8_t event_type;
         uint8_t sub_event_type;
         uint8_t priority;
-        rte_node_t next_node;
 };
 
 struct eventdev_tx_node_item {

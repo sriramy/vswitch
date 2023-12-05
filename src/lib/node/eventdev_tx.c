@@ -25,7 +25,15 @@ static struct eventdev_tx_node_list node_list = {
 static struct eventdev_tx_node_item* eventdev_tx_node_data_get(rte_node_t node_id);
 
 int
-eventdev_tx_node_data_add(rte_node_t node_id, struct eventdev_tx_node_ctx ctx)
+eventdev_tx_node_data_add(rte_node_t node_id,
+			  uint16_t ev_id,
+			  uint16_t ev_port_id,
+			  uint8_t op,
+			  uint8_t sched_type,
+			  uint8_t queue_id,
+			  uint8_t event_type,
+			  uint8_t sub_event_type,
+			  uint8_t priority)
 {
 	struct eventdev_tx_node_item* item;
 
@@ -38,7 +46,14 @@ eventdev_tx_node_data_add(rte_node_t node_id, struct eventdev_tx_node_ctx ctx)
 		return -ENOMEM;
 
 	item->node_id = node_id;
-	item->ctx = ctx;
+	item->ctx.ev_id = ev_id;
+	item->ctx.ev_port_id = ev_port_id;
+	item->ctx.op = op;
+	item->ctx.sched_type = sched_type;
+	item->ctx.queue_id = queue_id;
+	item->ctx.event_type = event_type;
+	item->ctx.sub_event_type = sub_event_type;
+	item->ctx.priority = priority;
 	item->prev = NULL;
 	item->next = node_list.head;
 	node_list.head = item;
@@ -133,7 +148,6 @@ eventdev_tx_node_init(__rte_unused const struct rte_graph *graph, struct rte_nod
 
 static struct rte_node_register eventdev_tx_node = {
 	.process = eventdev_tx_node_process,
-	.flags = RTE_NODE_SOURCE_F,
 	.name = "vs_eventdev_tx",
 
 	.init = eventdev_tx_node_init,

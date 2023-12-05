@@ -137,7 +137,7 @@ cli_stage_set_queue_out(void *parsed_result, struct cmdline *cl, __rte_unused vo
 }
 
 static void
-cli_stage_set_link_queue(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+cli_stage_set_link_queue_in(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
 	struct stage_cmd_tokens *res = parsed_result;
         char stage_name[STAGE_NAME_MAX_LEN];
@@ -149,9 +149,28 @@ cli_stage_set_link_queue(void *parsed_result, struct cmdline *cl, __rte_unused v
 	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
 	link_name[strlen(res->dev)] = '\0';
 
-        rc = stage_config_set_link_queue(stage_name, link_name, res->in_qid);
+        rc = stage_config_set_link_queue_in(stage_name, link_name, res->in_qid);
         if (rc < 0)
-                cmdline_printf(cl, "stage set %s input event queue failed: %s\n",
+                cmdline_printf(cl, "stage set %s input link queue failed: %s\n",
+			       stage_name, rte_strerror(-rc));
+}
+
+static void
+cli_stage_set_link_queue_out(void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	struct stage_cmd_tokens *res = parsed_result;
+        char stage_name[STAGE_NAME_MAX_LEN];
+        char link_name[RTE_ETH_NAME_MAX_LEN];
+	int rc = -ENOENT;
+
+	rte_strscpy(stage_name, res->name, STAGE_NAME_MAX_LEN);
+	stage_name[strlen(res->name)] = '\0';
+	rte_strscpy(link_name, res->dev, RTE_ETH_NAME_MAX_LEN);
+	link_name[strlen(res->dev)] = '\0';
+
+        rc = stage_config_set_link_queue_out(stage_name, link_name, res->out_qid);
+        if (rc < 0)
+                cmdline_printf(cl, "stage set %s output link queue failed: %s\n",
 			       stage_name, rte_strerror(-rc));
 }
 
@@ -297,12 +316,12 @@ cmdline_parse_inst_t stage_set_queue_out_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_link_queue_help[] = "stage set <stage_name> link <name> queue <qid> ";
+cmd_stage_set_link_queue_in_help[] = "stage set <stage_name> link <name> queue in <qid> ";
 
-cmdline_parse_inst_t stage_set_link_queue_cmd_ctx = {
-	.f = cli_stage_set_link_queue,
+cmdline_parse_inst_t stage_set_link_queue_in_cmd_ctx = {
+	.f = cli_stage_set_link_queue_in,
 	.data = NULL,
-	.help_str = cmd_stage_set_link_queue_help,
+	.help_str = cmd_stage_set_link_queue_in_help,
 	.tokens = {
 		(void *)&stage_cmd,
                 (void *)&stage_set,
@@ -310,7 +329,28 @@ cmdline_parse_inst_t stage_set_link_queue_cmd_ctx = {
 		(void *)&stage_link,
 		(void *)&stage_dev,
 		(void *)&stage_queue,
+		(void *)&stage_in_queue,
 		(void *)&stage_in_qid,
+		NULL,
+	},
+};
+
+static char const
+cmd_stage_set_link_queue_out_help[] = "stage set <stage_name> link <name> queue out <qid> ";
+
+cmdline_parse_inst_t stage_set_link_queue_out_cmd_ctx = {
+	.f = cli_stage_set_link_queue_out,
+	.data = NULL,
+	.help_str = cmd_stage_set_link_queue_out_help,
+	.tokens = {
+		(void *)&stage_cmd,
+                (void *)&stage_set,
+		(void *)&stage_name,
+		(void *)&stage_link,
+		(void *)&stage_dev,
+		(void *)&stage_queue,
+		(void *)&stage_out_queue,
+		(void *)&stage_out_qid,
 		NULL,
 	},
 };

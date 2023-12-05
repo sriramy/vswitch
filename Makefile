@@ -42,7 +42,7 @@ libdpdk_install:
 .PHONY: vswitch
 vswitch: $(VSWITCH_SRC_DIR)/*
 	@echo "  vswitch"
-	$(Q)meson setup build --buildtype debug $(P)
+	$(Q)meson setup build --buildtype debug --wipe $(P)
 	$(Q)meson configure build $(P)
 	$(Q)meson compile -C build $(P)
 

@@ -38,7 +38,8 @@ struct stage_config {
 	uint32_t stage_id;
 	uint32_t coremask;
 	uint8_t type;
-	struct stage_link_queue_config link_queue[STAGE_MAX_LINK_QUEUES];
+	struct stage_link_queue_config link_in_queue[STAGE_MAX_LINK_QUEUES];
+	struct stage_link_queue_config link_out_queue[STAGE_MAX_LINK_QUEUES];
 	struct stage_ev_queue_config ev_queue;
 };
 
