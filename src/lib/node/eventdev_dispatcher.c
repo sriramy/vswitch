@@ -18,7 +18,7 @@
 #define DEFAULT_PKT_BURST (32)
 #define DEFAULT_EVENT_BURST (32)
 
-struct eventdev_dispatcher_node_ctx *node_ctx = NULL;
+static struct eventdev_dispatcher_node_data node_data;
 
 static __rte_always_inline uint16_t
 eventdev_dispatcher_node_process(struct rte_graph *graph,
@@ -34,8 +34,12 @@ eventdev_dispatcher_node_process(struct rte_graph *graph,
 
 	for (i = 0; i < count; i++) {
 		event = (struct rte_event *)events[i];
-		if (ctx->next_index[event->mbuf->port][0].enabled) {
-			next_index = ctx->next_index[event->mbuf->port][0].id;
+		if (event->event_type == RTE_EVENT_TYPE_CPU) {
+			if (ctx->node_data->next_ethdev[event->mbuf->port][0].enabled)
+				next_index = ctx->node_data->next_ethdev[event->mbuf->port][0].id;
+		} else if (event->event_type == RTE_EVENT_TYPE_CPU) {
+			if (ctx->node_data->next_eventdev[ctx->port_id].enabled)
+				next_index = ctx->node_data->next_eventdev[ctx->port_id].id;
 		}
 		rte_node_enqueue(graph,
 				 node,
@@ -48,12 +52,9 @@ eventdev_dispatcher_node_process(struct rte_graph *graph,
 }
 
 int
-eventdev_dispatcher_set_next(const char* next_node, uint16_t port_id, uint16_t queue_id)
+eventdev_dispatcher_set_next_ethdev(const char* next_node, uint16_t port_id, uint16_t queue_id)
 {
 	rte_node_t id;
-
-	if (!node_ctx)
-		return -EINVAL;
 
 	id = rte_node_from_name("vs_eventdev_dispatcher");
 	if (id == RTE_NODE_ID_INVALID)
@@ -61,8 +62,25 @@ eventdev_dispatcher_set_next(const char* next_node, uint16_t port_id, uint16_t q
 
 	rte_node_edge_update(id, RTE_EDGE_ID_INVALID, &next_node, 1);
 
-	node_ctx->next_index[port_id][queue_id].enabled = 1;
-	node_ctx->next_index[port_id][queue_id].id = rte_node_edge_count(id) - 1; 
+	node_data.next_ethdev[port_id][queue_id].enabled = 1;
+	node_data.next_ethdev[port_id][queue_id].id = rte_node_edge_count(id) - 1; 
+
+	return 0;
+}
+
+int
+eventdev_dispatcher_set_next_eventdev(const char* next_node, uint16_t port_id)
+{
+	rte_node_t id;
+
+	id = rte_node_from_name("vs_eventdev_dispatcher");
+	if (id == RTE_NODE_ID_INVALID)
+		return -EIO;
+
+	rte_node_edge_update(id, RTE_EDGE_ID_INVALID, &next_node, 1);
+
+	node_data.next_eventdev[port_id].enabled = 1;
+	node_data.next_eventdev[port_id].id = rte_node_edge_count(id) - 1;
 
 	return 0;
 }
@@ -72,8 +90,8 @@ eventdev_dispatcher_node_init(__rte_unused const struct rte_graph *graph, struct
 {
 	struct eventdev_dispatcher_node_ctx *ctx = (struct eventdev_dispatcher_node_ctx *)node->ctx;
 
-	memset(ctx->next_index, 0, sizeof(ctx->next_index));
-	node_ctx = ctx;
+	ctx->port_id = rte_lcore_id();
+	ctx->node_data = &node_data;
 
 	return 0;
 }

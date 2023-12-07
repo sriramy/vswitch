@@ -8,6 +8,7 @@
 
 #include <rte_graph.h>
 
-int eventdev_dispatcher_set_next(const char* next_node, uint16_t port_id, uint16_t queue_id);
+int eventdev_dispatcher_set_next_ethdev(const char* next_node, uint16_t port_id, uint16_t queue_id);
+int eventdev_dispatcher_set_next_eventdev(const char* next_node, uint16_t port_id);
 
 #endif /* __SRC_LIB_EVENTDEV_DISPATCHER_H__ */

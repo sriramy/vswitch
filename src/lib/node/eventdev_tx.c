@@ -145,7 +145,9 @@ eventdev_tx_node_init(__rte_unused const struct rte_graph *graph, struct rte_nod
 	if (item)
 		memcpy(ctx, &item->ctx, sizeof(item->ctx));
 
-	return (item != NULL);
+	RTE_VERIFY(item != NULL);
+
+	return 0;
 }
 
 static struct rte_node_register eventdev_tx_node = {

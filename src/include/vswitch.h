@@ -10,6 +10,7 @@
 #include <rte_graph.h>
 
 #define EV_QUEUE_ID_INVALID	(0xFF)
+#define GRAPH_MAX_PATTERNS	(16)
 
 struct link_queues {
 	uint16_t link_id;

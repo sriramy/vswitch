@@ -65,9 +65,14 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 static void
 cli_vswitch_start(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
 {
-        cmdline_printf(cl, "Starting vswitch...\n");
-        vswitch_start();
-        cmdline_printf(cl, "Done.\n");
+        int rc;
+	
+	cmdline_printf(cl, "Starting vswitch...\n");
+        rc = vswitch_start();
+	if (rc < 0)
+                cmdline_printf(cl, "Vswitch start failed: %s\n", rte_strerror(-rc));
+	else
+		cmdline_printf(cl, "Done.\n");
 }
 
 cmdline_parse_token_string_t vswitch_cmd =
