@@ -130,7 +130,10 @@ cli_stage_set_queue_out(void *parsed_result, struct cmdline *cl, __rte_unused vo
 	stage_name[strlen(res->name)] = '\0';
 
         rc = stage_config_set_ev_queue_out(stage_name,
-					  res->out_qid);
+					  res->out_qid,
+					  (strcmp(res->schedule_type, "atomic") == 0) ?
+						RTE_SCHED_TYPE_ATOMIC :
+					  	RTE_SCHED_TYPE_ORDERED);
         if (rc < 0)
                 cmdline_printf(cl, "stage set %s output event queue failed: %s\n",
 			       stage_name, rte_strerror(-rc));
@@ -298,7 +301,7 @@ cmdline_parse_inst_t stage_set_queue_in_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_queue_out_help[] = "stage set <stage_name> queue out <qid> ";
+cmd_stage_set_queue_out_help[] = "stage set <stage_name> queue out <qid> schedule <atomic#ordered>";
 
 cmdline_parse_inst_t stage_set_queue_out_cmd_ctx = {
 	.f = cli_stage_set_queue_out,
@@ -311,6 +314,8 @@ cmdline_parse_inst_t stage_set_queue_out_cmd_ctx = {
 		(void *)&stage_queue,
 		(void *)&stage_out_queue,
 		(void *)&stage_out_qid,
+		(void *)&stage_schedule,
+		(void *)&stage_schedule_type,
 		NULL,
 	},
 };

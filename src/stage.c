@@ -246,7 +246,8 @@ stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_typ
 
         if (s) {
 		s->config.ev_queue.in = qid;
-		ev_queue_config = &s->config.ev_queue.config;
+		s->config.ev_queue.sched_type_in = schedule_type;
+		ev_queue_config = &s->config.ev_queue.config_in;
 
 		switch (s->config.type) {
 		case STAGE_TYPE_WORKER:
@@ -269,12 +270,13 @@ stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_typ
 }
 
 int
-stage_config_set_ev_queue_out(char const *name, uint8_t qid)
+stage_config_set_ev_queue_out(char const *name, uint8_t qid, uint8_t schedule_type)
 {
         struct stage *s = stage_config_get(name);
 
         if (s) {
 		s->config.ev_queue.out = qid;
+		s->config.ev_queue.sched_type_out = schedule_type;
                 return 0;
         }
 

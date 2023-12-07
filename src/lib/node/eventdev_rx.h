@@ -8,11 +8,9 @@
 
 #include <rte_graph.h>
 
-struct eventdev_rx_node_ctx;
-
 rte_node_t eventdev_rx_node_clone(const char *name);
 
-int eventdev_rx_node_data_add(rte_node_t node_id, struct eventdev_rx_node_ctx ctx);
+int eventdev_rx_node_data_add(rte_node_t node_id, uint16_t ev_id, uint16_t ev_port_id);
 int eventdev_rx_node_data_rem(rte_node_t node_id);
 
 int eventdev_rx_node_data_add_next_node(rte_node_t id, const char *edge_name);

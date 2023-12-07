@@ -8,6 +8,7 @@ if not build
 endif
 
 sources += files(
+        'node/eventdev_dispatcher.c',
         'node/eventdev_rx.c',
         'node/eventdev_tx.c',
 )

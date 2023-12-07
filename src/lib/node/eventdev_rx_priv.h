@@ -9,6 +9,12 @@
 #include <rte_common.h>
 #include <rte_graph.h>
 
+enum eventdev_rx_next_nodes {
+        EVETNDEV_RX_NEXT_DISPATCHER,
+	EVENTDEV_RX_NEXT_PKT_DROP,
+	EVENTDEV_RX_NEXT_MAX,
+};
+
 struct eventdev_rx_node_ctx {
         uint16_t ev_id;
 	uint16_t ev_port_id;

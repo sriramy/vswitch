@@ -60,7 +60,7 @@ eventdev_rx_node_data_add_next_node(rte_node_t id, const char *edge_name) {
 }
 
 int
-eventdev_rx_node_data_add(rte_node_t node_id, struct eventdev_rx_node_ctx ctx)
+eventdev_rx_node_data_add(rte_node_t node_id, uint16_t ev_id, uint16_t ev_port_id)
 {
 	struct eventdev_rx_node_item* item;
 
@@ -73,7 +73,9 @@ eventdev_rx_node_data_add(rte_node_t node_id, struct eventdev_rx_node_ctx ctx)
 		return -ENOMEM;
 
 	item->node_id = node_id;
-	item->ctx = ctx;
+	item->ctx.ev_id = ev_id;
+	item->ctx.ev_port_id = ev_port_id;
+	item->ctx.next_node = EVETNDEV_RX_NEXT_DISPATCHER;
 	item->prev = NULL;
 	item->next = node_list.head;
 	node_list.head = item;
@@ -159,8 +161,11 @@ static struct rte_node_register eventdev_rx_node = {
 
 	.init = eventdev_rx_node_init,
 
-	.nb_edges = 0,
-	.next_nodes = {},
+	.nb_edges = EVENTDEV_RX_NEXT_MAX,
+	.next_nodes = {
+		[EVETNDEV_RX_NEXT_DISPATCHER] = "vs_eventdev_dispatcher",
+		[EVENTDEV_RX_NEXT_PKT_DROP] = "pkt_drop",
+	},
 };
 
 rte_node_t

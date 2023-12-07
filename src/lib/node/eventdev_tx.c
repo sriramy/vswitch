@@ -108,14 +108,16 @@ eventdev_tx_node_process(struct rte_graph *graph,
 	int i;
 
 	for (i = 0; i < count; i++) {
-		events[i].flow_id = ((struct rte_mbuf*)mbufs[i])->hash.rss;
 		events[i].op = ctx->op;
-		events[i].sched_type = ctx->sched_type;
 		events[i].queue_id = ctx->queue_id;
-		events[i].event_type = ctx->event_type;
-		events[i].sub_event_type = ctx->sub_event_type;
-		events[i].priority = ctx->priority;
+		events[i].sched_type = ctx->sched_type;
 		events[i].mbuf = mbufs[i];
+		if (ctx->op == RTE_EVENT_OP_NEW) {
+			events[i].flow_id = ((struct rte_mbuf*)mbufs[i])->hash.rss;
+			events[i].event_type = ctx->event_type;
+			events[i].sub_event_type = ctx->sub_event_type;
+			events[i].priority = ctx->priority;
+		}
 	}
 
 	n_pkts = rte_event_enqueue_burst(ctx->ev_id,

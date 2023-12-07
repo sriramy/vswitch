@@ -29,8 +29,10 @@ struct stage_link_queue_config {
 
 struct stage_ev_queue_config {
 	uint8_t in;
+	uint8_t sched_type_in;
 	uint8_t out;
-	struct rte_event_queue_conf config;
+	uint8_t sched_type_out;
+	struct rte_event_queue_conf config_in;
 };
 
 struct stage_config {
@@ -63,8 +65,9 @@ int stage_config_rem(char const *name);
 
 int stage_config_set_type(char const *name, uint8_t type);
 int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type);
-int stage_config_set_ev_queue_out(char const *name, uint8_t qid);
-int stage_config_set_link_queue(char const *name, char const *link_name, uint8_t qid);
+int stage_config_set_ev_queue_out(char const *name, uint8_t qid, uint8_t schedule_type);
+int stage_config_set_link_queue_in(char const *name, char const *link_name, uint8_t qid);
+int stage_config_set_link_queue_out(char const *name, char const *link_name, uint8_t qid);
 
 int stage_config_walk(stage_config_cb cb, void *data);
 

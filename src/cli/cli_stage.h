@@ -36,6 +36,7 @@ extern cmdline_parse_inst_t stage_show_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_type_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_queue_in_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_queue_out_cmd_ctx;
-extern cmdline_parse_inst_t stage_set_link_queue_cmd_ctx;
+extern cmdline_parse_inst_t stage_set_link_queue_in_cmd_ctx;
+extern cmdline_parse_inst_t stage_set_link_queue_out_cmd_ctx;
 
 #endif /* __VSWITCH_SRC_CLI_STAGE_H_*/

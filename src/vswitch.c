@@ -16,6 +16,8 @@
 #include "link.h"
 #include "stage.h"
 #include "vswitch.h"
+#include "node/eventdev_dispatcher.h"
+#include "node/eventdev_rx.h"
 #include "node/eventdev_tx.h"
 
 #define DEFAULT_PKT_BURST (32)
@@ -39,7 +41,7 @@ produce_pkts(uint16_t link_id, uint16_t queue_id, void *arg)
 	for (i = 0; i < nb_rx; i++) {
 		events[i].flow_id = mbufs[i]->hash.rss;
 		events[i].op = RTE_EVENT_OP_NEW;
-		events[i].sched_type = lcore->type;
+		events[i].sched_type = lcore->ev_out_queue_sched_type;
 		events[i].queue_id = lcore->ev_out_queue;
 		events[i].event_type = RTE_EVENT_TYPE_ETHDEV;
 		events[i].sub_event_type = 0;
@@ -249,16 +251,20 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 			switch (stage_config->type) {
 			case STAGE_TYPE_RX:
 				lcore->ev_out_queue_needed = 1;
+				lcore->ev_out_queue_sched_type = stage_config->ev_queue.sched_type_out;
 				lcore->ev_out_queue = stage_config->ev_queue.out;
 				break;
 			case STAGE_TYPE_WORKER:
 				lcore->ev_in_queue_needed = 1;
+				lcore->ev_in_queue_sched_type = stage_config->ev_queue.sched_type_in;
 				lcore->ev_in_queue = stage_config->ev_queue.in;
 				lcore->ev_out_queue_needed = 1;
+				lcore->ev_out_queue_sched_type = stage_config->ev_queue.sched_type_out;
 				lcore->ev_out_queue = stage_config->ev_queue.out;
 				break;
 			case STAGE_TYPE_TX:
 				lcore->ev_in_queue_needed = 1;
+				lcore->ev_in_queue_sched_type = stage_config->ev_queue.sched_type_in;
 				lcore->ev_in_queue = stage_config->ev_queue.in;
 				break;
 			default:
@@ -297,13 +303,13 @@ stage_configure_input_queues(__rte_unused struct stage_config *stage_config, __r
 	int rc = 0;
 
 	if (config->ev_info.event_dev_cap & RTE_EVENT_DEV_CAP_QUEUE_ALL_TYPES)
-		stage_config->ev_queue.config.event_queue_cfg |= RTE_EVENT_QUEUE_CFG_ALL_TYPES;
+		stage_config->ev_queue.config_in.event_queue_cfg |= RTE_EVENT_QUEUE_CFG_ALL_TYPES;
 
 	if (stage_config->type == STAGE_TYPE_WORKER ||
 	    stage_config->type == STAGE_TYPE_TX) {
 		rc = rte_event_queue_setup(config->ev_id,
 					   stage_config->ev_queue.in,
-					   &stage_config->ev_queue.config);
+					   &stage_config->ev_queue.config_in);
 	}
 
 	return rc;
@@ -368,13 +374,35 @@ vswitch_start()
 				goto err;
 			}
 
+			snprintf(node_name, sizeof(node_name), 
+				"%u-%u", lcore->ev_port_id, lcore->ev_in_queue);
+			node_id = eventdev_rx_node_clone(node_name);
+			if (node_id == RTE_NODE_ID_INVALID) {
+				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) create failed\n", node_name);
+				continue;
+			}
+
+			rc = eventdev_rx_node_data_add(node_id,
+						  lcore->ev_id,
+						  lcore->ev_port_id);
+			if (rc < 0)
+				goto err;
+
 			for (i = 0; i < lcore->nb_link_out_queues; i++) {
 				tx_config.link_id = lcore->link_out_queues[i].link_id;
 				tx_config.queue_id = lcore->link_out_queues[i].queue_id;
-				strncpy(tx_config.next_node, node_name, sizeof(tx_config.next_node));
-				rte_node_ethdev_tx_config(&tx_config);
-			}
+				node_id = rte_node_ethdev_tx_config(&tx_config);
+				if (node_id == RTE_NODE_ID_INVALID) {
+					RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) create failed\n",
+						tx_config.link_id, tx_config.queue_id);
+					continue;
+				}
 
+				eventdev_dispatcher_set_next(
+					rte_node_id_to_name(node_id),
+					tx_config.link_id,
+					tx_config.queue_id);
+			}
 		}
 
 		if (lcore->ev_out_queue_needed) {
@@ -389,8 +417,8 @@ vswitch_start()
 			rc = eventdev_tx_node_data_add(node_id,
 						  lcore->ev_id,
 						  lcore->ev_port_id,
-						  RTE_EVENT_OP_NEW,
-						  lcore->type,
+						  (lcore->ev_in_queue_needed) ? RTE_EVENT_OP_FORWARD : RTE_EVENT_OP_NEW,
+						  lcore->ev_out_queue_sched_type,
 						  lcore->ev_out_queue,
 						  RTE_EVENT_TYPE_ETHDEV,
 						  0,
@@ -401,7 +429,9 @@ vswitch_start()
 			for (i = 0; i < lcore->nb_link_in_queues; i++) {
 				rx_config.link_id = lcore->link_in_queues[i].link_id;
 				rx_config.queue_id = lcore->link_in_queues[i].queue_id;
-				strncpy(rx_config.next_node, node_name, sizeof(rx_config.next_node));
+				strncpy(rx_config.next_node,
+					rte_node_id_to_name(node_id),
+					sizeof(rx_config.next_node));
 				rte_node_ethdev_rx_config(&rx_config);
 			}
 		}
