@@ -15,14 +15,15 @@
 static char const usage[] = 
 	"%s EAL_ARGS --"
 	" -f CONFIG_FILE"
+	" -g GRAPH_STATS_FILE"
 	" -H host"
 	" -P port"
-        " --enable-graph-stats"
-	" --help\n";
+        " -G [--enable-graph-stats]"
+	" -h [--help]\n";
 
 static const struct option long_options[] = {
 	{"help", no_argument, NULL, 'h'},
-	{"enable-graph-stats", no_argument, NULL, 'g'},
+	{"enable-graph-stats", no_argument, NULL, 'G'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -31,11 +32,14 @@ int options_parse(struct params *p, int argc, char **argv)
 	char *app_name = argv[0];
 	char ch;
 
-	while ((ch = getopt_long(argc, argv, "hf:", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "hf:g:", long_options, NULL)) != -1) {
 		switch (ch)
 		{
 		case 'f':
 			p->config = strdup(optarg);
+			break;
+		case 'g':
+			p->graph_stats = strdup(optarg);
 			break;
 		case 'H':
 			p->host = strdup(optarg);
@@ -43,7 +47,7 @@ int options_parse(struct params *p, int argc, char **argv)
 		case 'P':
 			p->port = (uint16_t)atoi(optarg);
 			break;
-		case 'g':
+		case 'G':
 			p->enable_graph_stats = true;
 			break;
 		case 'h':

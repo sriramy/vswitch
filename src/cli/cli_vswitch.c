@@ -53,11 +53,14 @@ cli_vswitch_show(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unu
 			cmdline_printf(cl, "Worker\tlcore %u\ttype: %s\t"
 				"ev_id: %u,\tev_port_id: %u\t"
 				"ev_in_queue: %u\tev_out_queue: %u\t"
-				"nb_link_in_queues: %u, nb_link_out_queues: %u\n",
+				"nb_link_in_queues: %u\tnb_link_out_queues: %u\t"
+				"graph: %s\n",
 				core_id, stage_type_str[lcore->type],
 				lcore->ev_id, lcore->ev_port_id,
 				lcore->ev_in_queue, lcore->ev_out_queue,
-				lcore->nb_link_in_queues, lcore->nb_link_out_queues);
+				lcore->nb_link_in_queues, lcore->nb_link_out_queues,
+				lcore->graph_name);
+			rte_graph_dump(stdout, lcore->graph_id);
 		}
 	}
 }

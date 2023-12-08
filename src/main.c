@@ -101,6 +101,49 @@ err:
 	return ret;
 }
 
+static uint32_t
+stats_thread(__rte_unused void *arg)
+{
+	struct params *vswitch_params = (struct params *)arg;
+	FILE *fptr = NULL;
+	int ret = 0;
+
+	const char topLeft[] = {27, '[', '1', ';', '1', 'H', '\0'};
+	const char clr[] = {27, '[', '2', 'J', '\0'};
+	struct rte_graph_cluster_stats_param s_param;
+	struct rte_graph_cluster_stats *stats;
+	const char *pattern = "worker_*";
+
+	if (vswitch_params->graph_stats)
+		fptr = fopen(vswitch_params->graph_stats, "w+");
+
+	/* Prepare stats object */
+	memset(&s_param, 0, sizeof(s_param));
+	s_param.f = fptr ? fptr : stdout;
+	s_param.socket_id = SOCKET_ID_ANY;
+	s_param.graph_patterns = &pattern;
+	s_param.nb_graph_patterns = 1;
+
+	stats = rte_graph_cluster_stats_create(&s_param);
+	if (stats == NULL) {
+		RTE_LOG(CRIT, USER1, "rte_graph_cluster_stats_create failed: %s \n",
+			rte_strerror(-rte_errno));
+		goto err;
+	}
+
+	while (!stopped) {
+		/* Clear screen and move to top left */
+		printf("%s%s", clr, topLeft);
+		rte_graph_cluster_stats_get(stats, 0);
+		rte_delay_ms(1E3);
+	}
+
+	rte_graph_cluster_stats_destroy(stats);
+
+err:
+	return ret;
+}
+
 int main(int argc, char **argv)
 {
 	int ret;
@@ -146,6 +189,14 @@ int main(int argc, char **argv)
         if (ret < 0) {
 		RTE_LOG(CRIT, USER1, "Cannot create conn-interact thread\n");
 		goto error;
+	}
+
+	if (p.enable_graph_stats) {
+		ret = rte_thread_create_control(&conn_tid, "stats", stats_thread, &p);
+		if (ret < 0) {
+			RTE_LOG(CRIT, USER1, "Cannot create stats thread\n");
+			goto error;
+		}
 	}
 
 	RTE_LOG(CRIT, USER1, "Starting interactive CLI\n");

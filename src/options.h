@@ -11,6 +11,7 @@
 
 struct params {
 	char *config;
+	char *graph_stats;
 	char *host;
 	uint16_t port;
 	bool enable_graph_stats;
@@ -18,6 +19,7 @@ struct params {
 
 static const struct params params_default = {
 	.config = "/etc/vswitch/xcluster.cli",
+	.graph_stats = NULL,
 	.host = "0.0.0.0",
 	.port = 8086,
 	.enable_graph_stats = true,

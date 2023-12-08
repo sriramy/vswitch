@@ -405,7 +405,6 @@ vswitch_start()
 					"rte_graph_lookup(): graph %s not found\n",
 					lcore->graph_name);
 
-		rte_graph_dump(stdout, lcore->graph_id);
 	}
 
 	rc = rte_event_dev_service_id_get(config->ev_id, &config->ev_service_id);
