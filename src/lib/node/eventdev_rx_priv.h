@@ -11,7 +11,7 @@
 #include <rte_mempool.h>
 
 enum eventdev_rx_next_nodes {
-        EVETNDEV_RX_NEXT_DISPATCHER,
+        EVENTDEV_RX_NEXT_DISPATCHER,
 	EVENTDEV_RX_NEXT_PKT_DROP,
 	EVENTDEV_RX_NEXT_MAX,
 };

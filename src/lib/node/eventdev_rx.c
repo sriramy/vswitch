@@ -65,7 +65,7 @@ eventdev_rx_node_data_add(rte_node_t node_id, uint16_t ev_id, uint16_t ev_port_i
 	if (item)
 		return -EINVAL;
 
-	item = rte_malloc(NULL, sizeof(struct eventdev_rx_node_item), 0);
+	item = rte_zmalloc(NULL, sizeof(struct eventdev_rx_node_item), 0);
 	if (!item)
 		return -ENOMEM;
 
@@ -73,7 +73,7 @@ eventdev_rx_node_data_add(rte_node_t node_id, uint16_t ev_id, uint16_t ev_port_i
 	item->ctx.ev_id = ev_id;
 	item->ctx.ev_port_id = ev_port_id;
 	item->ctx.mp = rte_mempool_lookup(event_mempool);
-	item->ctx.next_node = EVETNDEV_RX_NEXT_DISPATCHER;
+	item->ctx.next_node = EVENTDEV_RX_NEXT_DISPATCHER;
 	item->prev = NULL;
 	item->next = node_list.head;
 	node_list.head = item;
@@ -125,18 +125,16 @@ eventdev_rx_node_process(struct rte_graph *graph,
 	struct eventdev_rx_node_ctx *ctx = (struct eventdev_rx_node_ctx *)node->ctx;
 	struct rte_event *events;
 	uint16_t n_events = 0;
-	int i, timeout = 0;
+	int timeout = 0;
 
-	if (likely(rte_mempool_get_bulk(ctx->mp, (void**)&events, RTE_GRAPH_BURST_SIZE)) < 0) {
+	if (likely(rte_mempool_get_bulk(ctx->mp, (void**)&events, RTE_GRAPH_BURST_SIZE)) == 0) {
 		n_events = rte_event_dequeue_burst(ctx->ev_id,
-						ctx->ev_port_id,
-						events,
-						RTE_GRAPH_BURST_SIZE,
-						timeout);
+						   ctx->ev_port_id,
+						   events,
+						   RTE_GRAPH_BURST_SIZE,
+						   timeout);
 		if (n_events) {
-			for (i = 0; i < n_events; i++) {
-				node->objs[i] = &events[i];
-			}
+			node->objs = (void**)&events;
 			node->idx = n_events;
 			rte_node_next_stream_move(graph, node, ctx->next_node);
 		}
@@ -168,7 +166,7 @@ static struct rte_node_register eventdev_rx_node = {
 
 	.nb_edges = EVENTDEV_RX_NEXT_MAX,
 	.next_nodes = {
-		[EVETNDEV_RX_NEXT_DISPATCHER] = "vs_eventdev_dispatcher",
+		[EVENTDEV_RX_NEXT_DISPATCHER] = "vs_eventdev_dispatcher",
 		[EVENTDEV_RX_NEXT_PKT_DROP] = "pkt_drop",
 	},
 };

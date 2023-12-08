@@ -65,9 +65,8 @@ vswitch_init()
 		goto err;
 	}
 
-	// TODO: Pick eventdev based on configuration instead
 	memset(config, 0, sizeof(*config));
-	config->ev_id = 0;
+	config->ev_id = 0; // TODO: Pick event device based on configuration instead
 	rc = rte_event_dev_info_get(config->ev_id, &config->ev_info);
 	if (rc < 0) {
 		rc = -rte_errno;
@@ -78,7 +77,7 @@ vswitch_init()
 		config->lcores[core_id].core_id = core_id;
 		config->lcores[core_id].enabled = 0;
 		config->lcores[core_id].ev_id = config->ev_id;
-		// config->lcores[core_id].ev_port_id = core_id;
+		config->lcores[core_id].ev_port_id = 0;
 		config->lcores[core_id].ev_in_queue_needed = 0;
 		config->lcores[core_id].ev_in_queue = EV_QUEUE_ID_INVALID;
 		config->lcores[core_id].ev_out_queue_needed = 0;
@@ -200,7 +199,6 @@ vswitch_start()
 	char const *ev_node_name, *link_node_name;
 	struct rte_event_dev_config ev_config;
 	char node_suffix[RTE_NODE_NAMESIZE];
-	struct rte_graph_param graph_config;
 	rte_node_t ev_node_id, link_node_id;
 	struct lcore_params *lcore;
 	char const **node_patterns;
@@ -237,7 +235,7 @@ vswitch_start()
 			continue;
 
 		/* Reset graph config */
-		memset(&graph_config, 0, sizeof(graph_config));
+		memset(&lcore->graph_config, 0, sizeof(lcore->graph_config));
 		nb_node_patterns = 0;
 		node_patterns = rte_zmalloc(
 			NULL,
@@ -391,20 +389,8 @@ vswitch_start()
 		}
 		snprintf(lcore->graph_name, sizeof(lcore->graph_name),
 			"worker_%u", core_id);
-		graph_config.node_patterns = node_patterns;
-		graph_config.nb_node_patterns = nb_node_patterns;
-		lcore->graph_id = rte_graph_create(lcore->graph_name, &graph_config);
-		if (lcore->graph_id == RTE_GRAPH_ID_INVALID)
-			rte_exit(EXIT_FAILURE,
-					"rte_graph_create(): graph_id invalid"
-					" for lcore %u\n", core_id);
-
-		lcore->graph = rte_graph_lookup(lcore->graph_name);
-		if (!lcore->graph)
-			rte_exit(EXIT_FAILURE,
-					"rte_graph_lookup(): graph %s not found\n",
-					lcore->graph_name);
-
+		lcore->graph_config.node_patterns = node_patterns;
+		lcore->graph_config.nb_node_patterns = nb_node_patterns;
 	}
 
 	rc = rte_event_dev_service_id_get(config->ev_id, &config->ev_service_id);
@@ -423,10 +409,19 @@ vswitch_start()
 	RTE_LCORE_FOREACH_WORKER(core_id) {
 		lcore = &config->lcores[core_id];
 
-		if (!lcore->graph) {
-			RTE_LOG(INFO, USER1, "Lcore %u has nothing to do\n", core_id);
-			return 0;
-		}
+		lcore->graph_id = rte_graph_create(lcore->graph_name, &lcore->graph_config);
+		if (lcore->graph_id == RTE_GRAPH_ID_INVALID)
+			rte_exit(EXIT_FAILURE,
+					"rte_graph_create(): graph_id invalid"
+					" for lcore %u\n", core_id);
+
+		lcore->graph = rte_graph_lookup(lcore->graph_name);
+		if (!lcore->graph)
+			rte_exit(EXIT_FAILURE,
+					"rte_graph_lookup(): graph %s not found\n",
+					lcore->graph_name);
+
+		rte_graph_obj_dump(stderr, lcore->graph, true);
 		rte_eal_remote_launch(launch_graph_worker, lcore, core_id);
 	}
 
