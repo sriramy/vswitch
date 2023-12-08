@@ -10,7 +10,7 @@
 ##  libdpdk_clean Cleans DPDK build
 ##
 
-LIBDPDK_SRC=dpdk/*
+PKG_CONFIG_PATH ?= $(XCLUSTER_WORKSPACE)/sys/dpdk/usr/local/lib/x86_64-linux-gnu/pkgconfig
 VSWITCH_SRC_DIR=src
 CMDLINE_GEN=dpdk/buildtools/dpdk-cmdline-gen.py
 CMD_LISTS := $(wildcard $(VSWITCH_SRC_DIR)/cli/*.list)
@@ -24,26 +24,11 @@ $(VSWITCH_SRC_DIR)/cli/%.h: $(VSWITCH_SRC_DIR)/cli/%.list
 .PHONY: stubs
 stubs: $(CMD_GEN_H)
 
-.PHONY: libdpdk
-libdpdk: $(LIBDPDK_SRC)
-	@echo "  libdpdk"
-	$(Q)meson setup dpdk/build dpdk $(P)
-	$(Q)meson configure -Dmax_lcores=12 -Denable_apps=test-pmd dpdk/build $(P)
-	$(Q)meson compile -C dpdk/build $(P)
-
-.PHONY: libdpdk_clean
-libdpdk_clean:
-	$(Q)ninja -C dpdk/build -t clean $(P)
-
-.PHONY: libdpdk_install
-libdpdk_install:
-	$(Q)meson install -C dpdk/build $(P)
-
 .PHONY: vswitch
 vswitch: $(VSWITCH_SRC_DIR)/*
 	@echo "  vswitch"
-	$(Q)meson setup build --buildtype debug --wipe $(P)
-	$(Q)meson configure build $(P)
+	$(Q)meson setup build --buildtype debug $(P)
+	$(Q)meson configure build --buildtype debug $(P)
 	$(Q)meson compile -C build $(P)
 
 .PHONY: vsnl-interceptor

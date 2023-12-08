@@ -195,8 +195,9 @@ vswitch_start()
 {
 	struct rte_node_ethdev_rx_config rx_config;
 	struct rte_node_ethdev_tx_config tx_config;
+	const char *ev_node_name, *link_node_name;
 	struct rte_event_dev_config ev_config;
-	char node_name[RTE_NODE_NAMESIZE];
+	char node_suffix[RTE_NODE_NAMESIZE];
 	struct rte_graph_param graph_config;
 	rte_node_t ev_node_id, link_node_id;
 	struct lcore_params *lcore;
@@ -241,6 +242,8 @@ vswitch_start()
 			GRAPH_MAX_PATTERNS * sizeof(*node_patterns),
 			0);
 
+		RTE_LOG(DEBUG, USER1, "Core (%u) create graph with patterns:\n", core_id);
+
 		rc = rte_event_port_setup(config->ev_id,
 					  lcore->ev_port_id,
 					  &lcore->ev_port_config);
@@ -260,11 +263,17 @@ vswitch_start()
 				goto err;
 			}
 
-			snprintf(node_name, sizeof(node_name), 
+			snprintf(node_suffix, sizeof(node_suffix), 
 				"%u-%u", lcore->ev_port_id, lcore->ev_in_queue);
-			ev_node_id = eventdev_rx_node_clone(node_name);
+			ev_node_id = eventdev_rx_node_clone(node_suffix);
 			if (ev_node_id == RTE_NODE_ID_INVALID) {
-				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) create failed\n", node_name);
+				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) create failed\n", node_suffix);
+				continue;
+			}
+
+			ev_node_name = rte_node_id_to_name(ev_node_id);
+			if (ev_node_name == NULL) {
+				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) get name failed\n", node_suffix);
 				continue;
 			}
 
@@ -274,10 +283,12 @@ vswitch_start()
 			if (rc < 0)
 				goto err;
 
-			node_patterns[nb_node_patterns++] = strndup(rte_node_id_to_name(ev_node_id),
-								    RTE_NODE_NAMESIZE);
-			node_patterns[nb_node_patterns++] = strndup("vs_eventdev_dispatcher",
-								    RTE_NODE_NAMESIZE);
+			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
+			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_rx: %u\n", ev_node_id);
+			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
+			node_patterns[nb_node_patterns++] = strdup("vs_eventdev_dispatcher");
+			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_dispatcher: %u\n", rte_node_from_name("vs_eventdev_dispatcher"));
+			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			for (i = 0; i < lcore->nb_link_out_queues; i++) {
 				tx_config.link_id = lcore->link_out_queues[i].link_id;
 				tx_config.queue_id = lcore->link_out_queues[i].queue_id;
@@ -288,10 +299,18 @@ vswitch_start()
 					continue;
 				}
 
-				node_patterns[nb_node_patterns++] = strndup(rte_node_id_to_name(link_node_id),
-									    RTE_NODE_NAMESIZE);
+				link_node_name = rte_node_id_to_name(link_node_id);
+				if (link_node_name == NULL) {
+					RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) get name failed\n",
+						tx_config.link_id, tx_config.queue_id);
+					continue;
+				}
+
+				node_patterns[nb_node_patterns++] = strdup(link_node_name);
+				RTE_LOG(DEBUG, USER1, "\tnode: ethdev_tx: %u\n", link_node_id);
+				RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 				rc = eventdev_dispatcher_set_next_ethdev(
-					rte_node_id_to_name(link_node_id),
+					link_node_name,
 					tx_config.link_id,
 					tx_config.queue_id);
 				if (rc < 0)
@@ -300,11 +319,17 @@ vswitch_start()
 		}
 
 		if (lcore->ev_out_queue_needed) {
-			snprintf(node_name, sizeof(node_name), 
+			snprintf(node_suffix, sizeof(node_suffix), 
 				"%u-%u", lcore->ev_port_id, lcore->ev_out_queue);
-			ev_node_id = eventdev_tx_node_clone(node_name);
+			ev_node_id = eventdev_tx_node_clone(node_suffix);
 			if (ev_node_id == RTE_NODE_ID_INVALID) {
-				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) create failed\n", node_name);
+				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) create failed\n", node_suffix);
+				continue;
+			}
+
+			ev_node_name = rte_node_id_to_name(ev_node_id);
+			if (ev_node_name == NULL) {
+				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) get name failed\n", node_suffix);
 				continue;
 			}
 
@@ -321,12 +346,9 @@ vswitch_start()
 				if (rc < 0)
 					goto err;
 
-				rc = eventdev_dispatcher_set_next_eventdev(
-					rte_node_id_to_name(ev_node_id),
-					core_id);
+				rc = eventdev_dispatcher_set_next_eventdev(ev_node_name, core_id);
 				if (rc < 0)
 					goto err;
-
 			} else {
 				rc = eventdev_tx_node_data_add(ev_node_id,
 							lcore->ev_id,
@@ -341,16 +363,13 @@ vswitch_start()
 					goto err;
 			}
 
-
-			node_patterns[nb_node_patterns++] = strndup(rte_node_id_to_name(ev_node_id),
-									RTE_NODE_NAMESIZE);
-
+			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
+			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_tx: %u\n", ev_node_id);
+			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			for (i = 0; i < lcore->nb_link_in_queues; i++) {
 				rx_config.link_id = lcore->link_in_queues[i].link_id;
 				rx_config.queue_id = lcore->link_in_queues[i].queue_id;
-				strncpy(rx_config.next_node,
-					rte_node_id_to_name(ev_node_id),
-					sizeof(rx_config.next_node));
+				strncpy(rx_config.next_node, ev_node_name, sizeof(rx_config.next_node));
 				link_node_id = rte_node_ethdev_rx_config(&rx_config);
 				if (link_node_id == RTE_NODE_ID_INVALID) {
 					RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) create failed\n",
@@ -358,14 +377,22 @@ vswitch_start()
 					continue;
 				}
 
-				node_patterns[nb_node_patterns++] = strndup(rte_node_id_to_name(link_node_id),
-									    RTE_NODE_NAMESIZE);
+				link_node_name = rte_node_id_to_name(link_node_id);
+				if (link_node_name == NULL) {
+					RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) get name failed\n",
+						rx_config.link_id, rx_config.queue_id);
+					continue;
+				}
+
+				node_patterns[nb_node_patterns++] = strdup(link_node_name);
+				RTE_LOG(DEBUG, USER1, "\tnode: ethdev_rx: %u, dispatcher: %u\n", link_node_id, rte_node_from_name("vs_eventdev_dispatcher"));
+				RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			}
 		}
 
-		RTE_LOG(INFO, USER1, "Core (%u) create graph with patterns:\n", core_id);
+		RTE_LOG(DEBUG, USER1, "Core (%u) create graph with patterns:\n", core_id);
 		for (i = 0; i < nb_node_patterns; i++) {
-			RTE_LOG(INFO, USER1, "\t%s\n", node_patterns[i]);
+			RTE_LOG(DEBUG, USER1, "\t%s\n", node_patterns[i]);
 		}
 		snprintf(lcore->graph_name, sizeof(lcore->graph_name),
 			"worker_%u", core_id);

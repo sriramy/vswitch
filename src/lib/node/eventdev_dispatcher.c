@@ -34,7 +34,7 @@ eventdev_dispatcher_node_process(struct rte_graph *graph,
 
 	for (i = 0; i < count; i++) {
 		event = (struct rte_event *)events[i];
-		if (event->event_type == RTE_EVENT_TYPE_CPU) {
+		if (event->event_type == RTE_EVENT_TYPE_ETHDEV) {
 			if (ctx->node_data->next_ethdev[event->mbuf->port][0].enabled)
 				next_index = ctx->node_data->next_ethdev[event->mbuf->port][0].id;
 		} else if (event->event_type == RTE_EVENT_TYPE_CPU) {
