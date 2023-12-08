@@ -242,8 +242,6 @@ vswitch_start()
 			GRAPH_MAX_PATTERNS * sizeof(*node_patterns),
 			0);
 
-		RTE_LOG(DEBUG, USER1, "Core (%u) create graph with patterns:\n", core_id);
-
 		rc = rte_event_port_setup(config->ev_id,
 					  lcore->ev_port_id,
 					  &lcore->ev_port_config);
@@ -284,11 +282,7 @@ vswitch_start()
 				goto err;
 
 			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
-			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_rx: %u\n", ev_node_id);
-			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			node_patterns[nb_node_patterns++] = strdup("vs_eventdev_dispatcher");
-			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_dispatcher: %u\n", rte_node_from_name("vs_eventdev_dispatcher"));
-			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			for (i = 0; i < lcore->nb_link_out_queues; i++) {
 				tx_config.link_id = lcore->link_out_queues[i].link_id;
 				tx_config.queue_id = lcore->link_out_queues[i].queue_id;
@@ -307,8 +301,6 @@ vswitch_start()
 				}
 
 				node_patterns[nb_node_patterns++] = strdup(link_node_name);
-				RTE_LOG(DEBUG, USER1, "\tnode: ethdev_tx: %u\n", link_node_id);
-				RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 				rc = eventdev_dispatcher_set_next_ethdev(
 					link_node_name,
 					tx_config.link_id,
@@ -364,8 +356,6 @@ vswitch_start()
 			}
 
 			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
-			RTE_LOG(DEBUG, USER1, "\tnode: vs_eventdev_tx: %u\n", ev_node_id);
-			RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			for (i = 0; i < lcore->nb_link_in_queues; i++) {
 				rx_config.link_id = lcore->link_in_queues[i].link_id;
 				rx_config.queue_id = lcore->link_in_queues[i].queue_id;
@@ -385,8 +375,6 @@ vswitch_start()
 				}
 
 				node_patterns[nb_node_patterns++] = strdup(link_node_name);
-				RTE_LOG(DEBUG, USER1, "\tnode: ethdev_rx: %u, dispatcher: %u\n", link_node_id, rte_node_from_name("vs_eventdev_dispatcher"));
-				RTE_LOG(DEBUG, USER1, "\t%u\t%s\n", nb_node_patterns, node_patterns[nb_node_patterns - 1]);
 			}
 		}
 
