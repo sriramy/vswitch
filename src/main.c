@@ -133,7 +133,8 @@ stats_thread(__rte_unused void *arg)
 
 	while (!stopped) {
 		/* Clear screen and move to top left */
-		printf("%s%s", clr, topLeft);
+		if (fptr)
+			printf("%s%s", clr, topLeft);
 		rte_graph_cluster_stats_get(stats, 0);
 		rte_delay_ms(1E3);
 	}
