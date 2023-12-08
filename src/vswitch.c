@@ -133,6 +133,7 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 				lcore->ev_in_queue_needed = 1;
 				lcore->ev_in_queue_sched_type = stage_config->ev_queue.sched_type_in;
 				lcore->ev_in_queue = stage_config->ev_queue.in;
+				strncpy(lcore->ev_in_queue_mp_name, stage_config->ev_queue.mp_name, RTE_MEMPOOL_NAMESIZE);
 				lcore->ev_out_queue_needed = 1;
 				lcore->ev_out_queue_sched_type = stage_config->ev_queue.sched_type_out;
 				lcore->ev_out_queue = stage_config->ev_queue.out;
@@ -141,6 +142,7 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 				lcore->ev_in_queue_needed = 1;
 				lcore->ev_in_queue_sched_type = stage_config->ev_queue.sched_type_in;
 				lcore->ev_in_queue = stage_config->ev_queue.in;
+				strncpy(lcore->ev_in_queue_mp_name, stage_config->ev_queue.mp_name, RTE_MEMPOOL_NAMESIZE);
 				break;
 			default:
 				break;
@@ -195,13 +197,13 @@ vswitch_start()
 {
 	struct rte_node_ethdev_rx_config rx_config;
 	struct rte_node_ethdev_tx_config tx_config;
-	const char *ev_node_name, *link_node_name;
+	char const *ev_node_name, *link_node_name;
 	struct rte_event_dev_config ev_config;
 	char node_suffix[RTE_NODE_NAMESIZE];
 	struct rte_graph_param graph_config;
 	rte_node_t ev_node_id, link_node_id;
 	struct lcore_params *lcore;
-	const char **node_patterns;
+	char const **node_patterns;
 	uint16_t nb_node_patterns;
 	uint16_t core_id;
 	int rc = -EINVAL;
@@ -277,12 +279,17 @@ vswitch_start()
 
 			rc = eventdev_rx_node_data_add(ev_node_id,
 						  lcore->ev_id,
-						  lcore->ev_port_id);
+						  lcore->ev_port_id,
+						  lcore->ev_in_queue_mp_name);
 			if (rc < 0)
 				goto err;
-
 			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
+
+			rc = eventdev_dispatcher_set_mempool(lcore->ev_in_queue_mp_name);
+			if (rc < 0)
+				goto err;
 			node_patterns[nb_node_patterns++] = strdup("vs_eventdev_dispatcher");
+
 			for (i = 0; i < lcore->nb_link_out_queues; i++) {
 				tx_config.link_id = lcore->link_out_queues[i].link_id;
 				tx_config.queue_id = lcore->link_out_queues[i].queue_id;

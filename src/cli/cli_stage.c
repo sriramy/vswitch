@@ -113,7 +113,8 @@ cli_stage_set_queue_in(void *parsed_result, struct cmdline *cl, __rte_unused voi
 					  res->in_qid,
 					  (strcmp(res->schedule_type, "atomic") == 0) ?
 						RTE_SCHED_TYPE_ATOMIC :
-					  	RTE_SCHED_TYPE_ORDERED);
+					  	RTE_SCHED_TYPE_ORDERED,
+					  res->mp_name);
         if (rc < 0)
                 cmdline_printf(cl, "stage set %s input event queue failed: %s\n",
 			       stage_name, rte_strerror(-rc));
@@ -211,6 +212,10 @@ cmdline_parse_token_string_t stage_schedule =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule, "schedule");
 cmdline_parse_token_string_t stage_schedule_type =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, schedule_type, "atomic#ordered");
+cmdline_parse_token_string_t stage_mempool =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, mempool, "mempool");
+cmdline_parse_token_string_t stage_mp_name =
+	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, mp_name, NULL);
 cmdline_parse_token_string_t stage_link =
 	TOKEN_STRING_INITIALIZER(struct stage_cmd_tokens, link, "link");
 cmdline_parse_token_string_t stage_dev =
@@ -281,7 +286,7 @@ cmdline_parse_inst_t stage_set_type_cmd_ctx = {
 };
 
 static char const
-cmd_stage_set_queue_in_help[] = "stage set <stage_name> queue in <qid> schedule <atomic#ordered>";
+cmd_stage_set_queue_in_help[] = "stage set <stage_name> queue in <qid> schedule <atomic#ordered> mempool <mp_name>";
 
 cmdline_parse_inst_t stage_set_queue_in_cmd_ctx = {
 	.f = cli_stage_set_queue_in,
@@ -296,6 +301,8 @@ cmdline_parse_inst_t stage_set_queue_in_cmd_ctx = {
 		(void *)&stage_in_qid,
 		(void *)&stage_schedule,
 		(void *)&stage_schedule_type,
+		(void *)&stage_mempool,
+		(void *)&stage_mp_name,
 		NULL,
 	},
 };

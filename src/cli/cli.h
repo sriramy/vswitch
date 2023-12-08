@@ -31,6 +31,6 @@ struct quit_cmd_tokens {
 int cli_init(char const *prompt);
 void cli_interact();
 void cli_quit();
-int cli_execute(const char *file_name);
+int cli_execute(char const *file_name);
 
 #endif /* __VSWITCH_SRC_CLI_CLI_H_ */

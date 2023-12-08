@@ -26,6 +26,7 @@ struct lcore_params {
 	uint8_t ev_in_queue_needed;
 	uint8_t ev_in_queue_sched_type;
 	uint8_t ev_in_queue;
+	char ev_in_queue_mp_name[RTE_MEMPOOL_NAMESIZE];
 	uint8_t ev_out_queue_needed;
 	uint8_t ev_out_queue_sched_type;
 	uint8_t ev_out_queue;

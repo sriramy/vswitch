@@ -24,9 +24,9 @@ struct conn {
 };
 
 struct conn_config {
-	const char *welcome;
-	const char *prompt;
-	const char *addr;
+	char const *welcome;
+	char const *prompt;
+	char const *addr;
 	uint16_t port;
 };
 

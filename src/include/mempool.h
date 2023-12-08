@@ -11,10 +11,17 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 
+enum {
+	MEMPOOL_TYPE_PKTMBUF = 0,
+	MEMPOOL_TYPE_EVENT,
+	MEMPOOL_TYPE_MAX
+};
+
 struct mempool_config {
 	char name[RTE_MEMPOOL_NAMESIZE];
-	int nb_mbufs;
-	int mbuf_sz;
+	uint8_t type;
+	int nb_items;
+	int item_sz;
 	int cache_sz;
 	int numa_node;
 };

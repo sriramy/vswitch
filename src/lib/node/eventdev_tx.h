@@ -8,7 +8,7 @@
 
 #include <rte_graph.h>
 
-rte_node_t eventdev_tx_node_clone(const char *name);
+rte_node_t eventdev_tx_node_clone(char const *name);
 
 int eventdev_tx_node_data_add(rte_node_t node_id,
 			      uint16_t ev_id,

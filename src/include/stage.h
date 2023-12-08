@@ -12,7 +12,7 @@
 #define STAGE_MAX		(16)
 #define STAGE_MAX_LINK_QUEUES	(8)
 
-extern const char *stage_type_str[];
+extern char const *stage_type_str[];
 
 enum {
 	STAGE_TYPE_RX = 0,
@@ -32,6 +32,7 @@ struct stage_ev_queue_config {
 	uint8_t sched_type_in;
 	uint8_t out;
 	uint8_t sched_type_out;
+	char mp_name[RTE_MEMPOOL_NAMESIZE];
 	struct rte_event_queue_conf config_in;
 };
 
@@ -64,7 +65,7 @@ int stage_config_add(struct stage_config *config);
 int stage_config_rem(char const *name);
 
 int stage_config_set_type(char const *name, uint8_t type);
-int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type);
+int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type, char const *mp_name);
 int stage_config_set_ev_queue_out(char const *name, uint8_t qid, uint8_t schedule_type);
 int stage_config_set_link_queue_in(char const *name, char const *link_name, uint8_t qid);
 int stage_config_set_link_queue_out(char const *name, char const *link_name, uint8_t qid);

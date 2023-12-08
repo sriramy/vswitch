@@ -163,7 +163,7 @@ static struct rte_node_register eventdev_tx_node = {
 };
 
 rte_node_t
-eventdev_tx_node_clone(const char *name)
+eventdev_tx_node_clone(char const *name)
 {
 	return rte_node_clone(eventdev_tx_node.id, name);
 }

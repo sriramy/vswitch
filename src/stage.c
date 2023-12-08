@@ -24,7 +24,7 @@ static struct stage *stage_array[STAGE_MAX];
 
 static struct stage_head stage_node = TAILQ_HEAD_INITIALIZER(stage_node);
 
-const char *stage_type_str[] =
+char const *stage_type_str[] =
 {
     [STAGE_TYPE_RX] 	= "rx",
     [STAGE_TYPE_WORKER]	= "worker",
@@ -239,7 +239,7 @@ stage_config_set_type(char const *name, uint8_t type)
 }
 
 int
-stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type)
+stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_type, char const *mp_name)
 {
 	struct rte_event_queue_conf *ev_queue_config;
         struct stage *s = stage_config_get(name);
@@ -247,6 +247,7 @@ stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule_typ
         if (s) {
 		s->config.ev_queue.in = qid;
 		s->config.ev_queue.sched_type_in = schedule_type;
+		strncpy(s->config.ev_queue.mp_name, mp_name, RTE_MEMPOOL_NAMESIZE);
 		ev_queue_config = &s->config.ev_queue.config_in;
 
 		switch (s->config.type) {

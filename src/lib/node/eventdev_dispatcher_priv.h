@@ -8,6 +8,7 @@
 
 #include <rte_common.h>
 #include <rte_graph.h>
+#include <rte_mempool.h>
 
 enum eventdev_dispatcher_next_nodes {
 	EVENTDEV_DISPATCHER_NEXT_PKT_DROP,
@@ -23,6 +24,7 @@ struct eventdev_dispatcher_node_data {
 		rte_edge_t id;
 		uint8_t enabled;
 	} next_eventdev[RTE_MAX_LCORE];
+	struct rte_mempool *mp;
 };
 
 struct eventdev_dispatcher_node_ctx {

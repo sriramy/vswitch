@@ -22,6 +22,8 @@ struct stage_cmd_tokens {
 	cmdline_fixed_string_t out_queue;
 	cmdline_fixed_string_t schedule;
 	cmdline_fixed_string_t schedule_type;
+	cmdline_fixed_string_t mempool;
+	cmdline_fixed_string_t mp_name;
 	cmdline_fixed_string_t link;
 	cmdline_fixed_string_t dev;
 	uint32_t mask;

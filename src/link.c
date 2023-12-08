@@ -10,6 +10,7 @@
 #include <rte_malloc.h>
 
 #include "link.h"
+#include "mempool.h"
 
 static struct link_head link_node = TAILQ_HEAD_INITIALIZER(link_node);
 
@@ -54,6 +55,7 @@ int
 link_config_add(struct link_config *config)
 {
 	struct rte_eth_conf link_conf;
+	struct mempool *m;
 	int rc = -EINVAL;
 	struct link* l;
 	uint32_t i;
@@ -75,15 +77,20 @@ link_config_add(struct link_config *config)
 		return -EEXIST;
         }
 
+	m = mempool_config_get(config->rx.mp_name);
+	if (!m) {
+		rc = -ENOENT;
+		goto err;
+	} else if (m->config.type != MEMPOOL_TYPE_PKTMBUF) {
+		rc = -EINVAL;
+		goto err;
+	}
+
 	memcpy(&link_conf, link_config_default_get(), sizeof(struct rte_eth_conf));
 	config->peer.link_name[0] = '\0';
 	config->peer.link_id = LINK_ID_MAX;
 	config->mtu = link_conf.rxmode.mtu;
-	config->rx.mp = rte_mempool_lookup(config->rx.mp_name);
-	if (!config->rx.mp) {
-                rc = -rte_errno;
-		goto err;
-	}
+	config->rx.mp = m->mp;
 
 	config->numa_node = rte_eth_dev_socket_id(config->link_id);
 	if (config->numa_node == SOCKET_ID_ANY)

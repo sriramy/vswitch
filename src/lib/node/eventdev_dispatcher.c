@@ -11,12 +11,10 @@
 #include <rte_graph.h>
 #include <rte_graph_worker.h>
 #include <rte_mbuf.h>
+#include <rte_mempool.h>
 
 #include "eventdev_dispatcher_priv.h"
 #include "eventdev_dispatcher.h"
-
-#define DEFAULT_PKT_BURST (32)
-#define DEFAULT_EVENT_BURST (32)
 
 static struct eventdev_dispatcher_node_data node_data;
 
@@ -48,11 +46,28 @@ eventdev_dispatcher_node_process(struct rte_graph *graph,
 				 count - n_pkts);
 	}
 
+	rte_mempool_put_bulk(ctx->node_data->mp, (void**)events, count);
 	return count;
 }
 
 int
-eventdev_dispatcher_set_next_ethdev(const char* next_node, uint16_t port_id, uint16_t queue_id)
+eventdev_dispatcher_set_mempool(char const* mp_name)
+{
+	rte_node_t id;
+
+	id = rte_node_from_name("vs_eventdev_dispatcher");
+	if (id == RTE_NODE_ID_INVALID)
+		return -EIO;
+
+	node_data.mp = rte_mempool_lookup(mp_name);
+	if (!node_data.mp)
+		return -ENOENT;
+
+	return 0;
+}
+
+int
+eventdev_dispatcher_set_next_ethdev(char const* next_node, uint16_t port_id, uint16_t queue_id)
 {
 	rte_node_t id;
 
@@ -69,7 +84,7 @@ eventdev_dispatcher_set_next_ethdev(const char* next_node, uint16_t port_id, uin
 }
 
 int
-eventdev_dispatcher_set_next_eventdev(const char* next_node, uint16_t port_id)
+eventdev_dispatcher_set_next_eventdev(char const* next_node, uint16_t port_id)
 {
 	rte_node_t id;
 

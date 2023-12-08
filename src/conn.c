@@ -111,7 +111,7 @@ conn_init(struct conn_config *config)
 	}
 
 	if (setsockopt(fd_server, SOL_SOCKET, SO_REUSEADDR,
-                       (const char *)&reuse, sizeof(reuse)) < 0)
+                       (char const *)&reuse, sizeof(reuse)) < 0)
 		goto err;
 
 	rc = bind(fd_server, (struct sockaddr *)&server_address, sizeof(server_address));

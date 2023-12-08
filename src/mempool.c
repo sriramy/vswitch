@@ -43,17 +43,35 @@ mempool_config_add(struct mempool_config *config)
         }
 
 	memcpy(&mp->config, config, sizeof(*config));
-	mp->mp = rte_pktmbuf_pool_create(
-                mp->config.name,
-                mp->config.nb_mbufs,
-                mp->config.cache_sz,
-		0,
-                mp->config.mbuf_sz,
-                mp->config.numa_node);
-	if (!mp->mp) {
-                rc = -rte_errno;
-                goto err;
+        switch (mp->config.type) {
+        case MEMPOOL_TYPE_PKTMBUF:
+                mp->mp = rte_pktmbuf_pool_create(
+                        mp->config.name,
+                        mp->config.nb_items,
+                        mp->config.cache_sz,
+                        0,
+                        mp->config.item_sz,
+                        mp->config.numa_node);
+                rc = (mp->mp) ? rc : -rte_errno;
+                break;
+        case MEMPOOL_TYPE_EVENT:
+                mp->mp = rte_mempool_create(
+                        mp->config.name,
+                        mp->config.nb_items,
+                        mp->config.item_sz,
+                        mp->config.cache_sz,
+                        0,
+                        NULL, NULL, NULL, NULL,
+                        mp->config.numa_node,
+                        0);
+                rc = (mp->mp) ? rc : -rte_errno;
+                break;
+        default:
+                break;
         }
+
+	if (!mp->mp)
+                goto err;
 
 	TAILQ_INSERT_TAIL(&mempool_node, mp, next);
         return 0;

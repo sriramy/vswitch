@@ -87,7 +87,7 @@ cli_quit()
 }
 
 int
-cli_execute(const char *file_name)
+cli_execute(char const *file_name)
 {
 	FILE *fp;
 	char *line = NULL;

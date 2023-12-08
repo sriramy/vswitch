@@ -16,12 +16,13 @@ struct mempool_config_cmd_tokens {
 	cmdline_fixed_string_t mempool;
 	cmdline_fixed_string_t action;
 	cmdline_fixed_string_t name;
+	cmdline_fixed_string_t type;
 	cmdline_fixed_string_t size;
-	cmdline_fixed_string_t mbufs;
+	cmdline_fixed_string_t items;
 	cmdline_fixed_string_t cache;
 	cmdline_fixed_string_t numa;
-	uint16_t mbuf_sz;
-	uint16_t nb_mbufs;
+	uint16_t item_sz;
+	uint16_t nb_items;
 	uint16_t cache_sz;
 	uint16_t node;
 };
