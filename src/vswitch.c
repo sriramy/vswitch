@@ -421,7 +421,7 @@ vswitch_start()
 					"rte_graph_lookup(): graph %s not found\n",
 					lcore->graph_name);
 
-		rte_graph_obj_dump(stderr, lcore->graph, true);
+		// rte_graph_obj_dump(stderr, lcore->graph, true);
 		rte_eal_remote_launch(launch_graph_worker, lcore, core_id);
 	}
 

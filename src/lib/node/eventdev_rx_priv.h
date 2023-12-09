@@ -17,8 +17,8 @@ enum eventdev_rx_next_nodes {
 };
 
 struct eventdev_rx_node_ctx {
-        uint16_t ev_id;
-	uint16_t ev_port_id;
+        uint8_t ev_id;
+        uint8_t ev_port_id;
         struct rte_mempool *mp;
         rte_node_t next_node;
 };

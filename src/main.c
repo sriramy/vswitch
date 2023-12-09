@@ -115,7 +115,7 @@ stats_thread(__rte_unused void *arg)
 	const char *pattern = "worker_*";
 
 	if (vswitch_params->graph_stats)
-		fptr = fopen(vswitch_params->graph_stats, "w+");
+		fptr = fopen(vswitch_params->graph_stats, "w");
 
 	/* Prepare stats object */
 	memset(&s_param, 0, sizeof(s_param));

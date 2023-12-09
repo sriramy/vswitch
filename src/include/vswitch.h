@@ -20,8 +20,8 @@ struct link_queues {
 struct lcore_params {
 	uint16_t core_id;
 	uint16_t enabled;
-	uint16_t ev_id;
-	uint16_t ev_port_id;
+	uint8_t ev_id;
+	uint8_t ev_port_id;
 	uint8_t type;
 	uint8_t ev_in_queue_needed;
 	uint8_t ev_in_queue_sched_type;

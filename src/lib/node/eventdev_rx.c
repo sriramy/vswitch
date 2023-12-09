@@ -57,7 +57,7 @@ eventdev_rx_node_data_add_next_node(rte_node_t id, char const *edge_name) {
 }
 
 int
-eventdev_rx_node_data_add(rte_node_t node_id, uint16_t ev_id, uint16_t ev_port_id, char const *event_mempool)
+eventdev_rx_node_data_add(rte_node_t node_id, uint8_t ev_id, uint8_t ev_port_id, char const *event_mempool)
 {
 	struct eventdev_rx_node_item* item;
 
@@ -123,18 +123,20 @@ eventdev_rx_node_process(struct rte_graph *graph,
 			 __rte_unused uint16_t cnt)
 {
 	struct eventdev_rx_node_ctx *ctx = (struct eventdev_rx_node_ctx *)node->ctx;
-	struct rte_event *events;
+	struct rte_event events[RTE_GRAPH_BURST_SIZE];
 	uint16_t n_events = 0;
-	int timeout = 0;
+	int i, timeout = 0;
 
-	if (likely(rte_mempool_get_bulk(ctx->mp, (void**)&events, RTE_GRAPH_BURST_SIZE)) == 0) {
+	if (likely(rte_mempool_get_bulk(ctx->mp, node->objs, RTE_GRAPH_BURST_SIZE)) == 0) {
 		n_events = rte_event_dequeue_burst(ctx->ev_id,
 						   ctx->ev_port_id,
 						   events,
 						   RTE_GRAPH_BURST_SIZE,
 						   timeout);
 		if (n_events) {
-			node->objs = (void**)&events;
+			for (i = 0; i < n_events; i++) {
+				node->objs[i] = &events[i];
+			}
 			node->idx = n_events;
 			rte_node_next_stream_move(graph, node, ctx->next_node);
 		}
