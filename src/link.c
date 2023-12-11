@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/queue.h>
 
+#include <rte_common.h>
 #include <rte_malloc.h>
 
 #include "link.h"
@@ -269,8 +270,10 @@ link_get_peer(uint16_t link_id, uint16_t *peer_link_id)
 	int rc = -ENOENT;
 
 	TAILQ_FOREACH(l, &link_node, next) {
-		if (l->config.link_id == link_id)
+		if (l->config.link_id == link_id) {
 			*peer_link_id = l->config.peer.link_id;
+			return 0;
+		}
 	}
 
 	return rc;

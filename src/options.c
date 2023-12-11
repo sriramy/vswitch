@@ -23,7 +23,8 @@ static char const usage[] =
 
 static const struct option long_options[] = {
 	{"help", no_argument, NULL, 'h'},
-	{"enable-graph-stats", no_argument, NULL, 'G'},
+	{"enable-graph-stats", no_argument, NULL, 's'},
+	{"enable-graph-pcap", no_argument, NULL, 'p'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -47,8 +48,11 @@ int options_parse(struct params *p, int argc, char **argv)
 		case 'P':
 			p->port = (uint16_t)atoi(optarg);
 			break;
-		case 'G':
+		case 's':
 			p->enable_graph_stats = true;
+			break;
+		case 'p':
+			p->enable_graph_pcap = true;
 			break;
 		case 'h':
 		default:

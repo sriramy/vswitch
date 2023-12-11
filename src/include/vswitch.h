@@ -9,6 +9,8 @@
 #include <rte_eventdev.h>
 #include <rte_graph.h>
 
+#include "options.h"
+
 #define EV_QUEUE_ID_INVALID	(0xFF)
 #define GRAPH_MAX_PATTERNS	(16)
 
@@ -50,6 +52,7 @@ struct lcore_params {
 } __rte_cache_aligned;
 
 struct vswitch_config {
+	struct params params;
 	int nb_ports;
 	int nb_queues;
 	int ev_id;
@@ -58,7 +61,7 @@ struct vswitch_config {
 	struct lcore_params lcores[RTE_MAX_LCORE];
 };
 
-int vswitch_init();
+int vswitch_init(struct params *p);
 int vswitch_quit();
 struct vswitch_config* vswitch_config_get();
 

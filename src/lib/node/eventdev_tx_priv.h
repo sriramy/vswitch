@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __SRC_LIB_EVENTDEV_TX_PRIV_H__
-#define __SRC_LIB_EVENTDEV_TX_PRIV_H__
+#ifndef __SRC_LIB_NODE_EVENTDEV_TX_PRIV_H__
+#define __SRC_LIB_NODE_EVENTDEV_TX_PRIV_H__
 
 #include <rte_common.h>
 #include <rte_graph.h>
@@ -36,4 +36,4 @@ struct eventdev_tx_node_list {
         struct eventdev_tx_node_item *head;
 };
 
-#endif /* __SRC_LIB_EVENTDEV_TX_PRIV_H__ */
+#endif /* __SRC_LIB_NODE_EVENTDEV_TX_PRIV_H__ */

@@ -21,6 +21,7 @@
 #include "node/eventdev_dispatcher.h"
 #include "node/eventdev_rx.h"
 #include "node/eventdev_tx.h"
+#include "node/forward.h"
 
 #define DEFAULT_PKT_BURST (32)
 #define DEFAULT_EVENT_BURST (32)
@@ -45,7 +46,7 @@ launch_graph_worker(void *arg)
 }
 
 int
-vswitch_init()
+vswitch_init(struct params *p)
 {
 	int num_eventdev = 0;
 	uint16_t core_id;
@@ -66,6 +67,7 @@ vswitch_init()
 	}
 
 	memset(config, 0, sizeof(*config));
+	config->params = *p;
 	config->ev_id = 0; // TODO: Pick event device based on configuration instead
 	rc = rte_event_dev_info_get(config->ev_id, &config->ev_info);
 	if (rc < 0) {
@@ -194,15 +196,17 @@ stage_configure_input_queues(__rte_unused struct stage_config *stage_config, __r
 int
 vswitch_start()
 {
+	char const *node_name, *ev_node_name, *link_node_name;
+	rte_node_t node_id, ev_node_id, link_node_id;
 	struct rte_node_ethdev_rx_config rx_config;
 	struct rte_node_ethdev_tx_config tx_config;
-	char const *ev_node_name, *link_node_name;
 	struct rte_event_dev_config ev_config;
 	char node_suffix[RTE_NODE_NAMESIZE];
-	rte_node_t ev_node_id, link_node_id;
+	char pcap_filename[NAME_MAX];
 	struct lcore_params *lcore;
 	char const **node_patterns;
 	uint16_t nb_node_patterns;
+	uint16_t peer_link_id;
 	uint16_t core_id;
 	int rc = -EINVAL;
 	int i;
@@ -266,52 +270,97 @@ vswitch_start()
 			ev_node_id = eventdev_rx_node_clone(node_suffix);
 			if (ev_node_id == RTE_NODE_ID_INVALID) {
 				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) create failed\n", node_suffix);
-				continue;
+				rc = -ENOMEM;
+				goto err;
 			}
 
 			ev_node_name = rte_node_id_to_name(ev_node_id);
 			if (ev_node_name == NULL) {
 				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) get name failed\n", node_suffix);
-				continue;
+				rc = -ENOENT;
+				goto err;
 			}
 
 			rc = eventdev_rx_node_data_add(ev_node_id,
 						  lcore->ev_id,
 						  lcore->ev_port_id,
 						  lcore->ev_in_queue_mp_name);
-			if (rc < 0)
+			if (rc < 0) {
+				RTE_LOG(INFO, USER1, "Eventdev rx node (%s) data add failed\n", ev_node_name);
 				goto err;
+			}
 			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
 
-			rc = eventdev_dispatcher_set_mempool(lcore->ev_in_queue_mp_name);
-			if (rc < 0)
-				goto err;
-			node_patterns[nb_node_patterns++] = strdup("vs_eventdev_dispatcher");
-
-			for (i = 0; i < lcore->nb_link_out_queues; i++) {
-				tx_config.link_id = lcore->link_out_queues[i].link_id;
-				tx_config.queue_id = lcore->link_out_queues[i].queue_id;
-				link_node_id = rte_node_ethdev_tx_config(&tx_config);
-				if (link_node_id == RTE_NODE_ID_INVALID) {
-					RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) create failed\n",
-						tx_config.link_id, tx_config.queue_id);
-					continue;
-				}
-
-				link_node_name = rte_node_id_to_name(link_node_id);
-				if (link_node_name == NULL) {
-					RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) get name failed\n",
-						tx_config.link_id, tx_config.queue_id);
-					continue;
-				}
-
-				node_patterns[nb_node_patterns++] = strdup(link_node_name);
-				rc = eventdev_dispatcher_set_next_ethdev(
-					link_node_name,
-					tx_config.link_id,
-					tx_config.queue_id);
-				if (rc < 0)
+			if (lcore->ev_out_queue_needed) {
+				rc = eventdev_dispatcher_set_mempool(lcore->ev_in_queue_mp_name);
+				if (rc < 0) {
+					RTE_LOG(INFO, USER1, "Eventdev dispatcher node set mempool (%s) failed\n", 
+						lcore->ev_in_queue_mp_name);
 					goto err;
+				}
+
+				node_patterns[nb_node_patterns++] = strdup("vs_eventdev_dispatcher");
+			} else {
+				snprintf(node_suffix, sizeof(node_suffix), "%u", lcore->ev_port_id);
+				node_id = forward_node_clone(node_suffix);
+				if (node_id == RTE_NODE_ID_INVALID) {
+					RTE_LOG(INFO, USER1, "Forward node (%s) create failed\n", node_suffix);
+					rc = -ENOMEM;
+					goto err;
+				}
+
+				node_name = rte_node_id_to_name(node_id);
+				if (node_name == NULL) {
+					RTE_LOG(INFO, USER1, "Forward node (%s) get name failed\n", node_suffix);
+					rc = -ENOENT;
+					goto err;
+				}
+
+				rc = eventdev_rx_node_data_set_next(ev_node_id, node_name);
+				if (rc < 0) {
+					RTE_LOG(INFO, USER1, "Eventdev rx node (%s) set next (%s) failed\n", 
+						ev_node_name, node_name);
+					goto err;
+				}
+
+				node_patterns[nb_node_patterns++] = strdup(node_name);
+				for (i = 0; i < lcore->nb_link_out_queues; i++) {
+					tx_config.link_id = lcore->link_out_queues[i].link_id;
+					tx_config.queue_id = lcore->link_out_queues[i].queue_id;
+					link_node_id = rte_node_ethdev_tx_config(&tx_config);
+					if (link_node_id == RTE_NODE_ID_INVALID) {
+						RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) create failed\n",
+							tx_config.link_id, tx_config.queue_id);
+						rc = -ENOMEM;
+						goto err;
+					}
+
+					link_node_name = rte_node_id_to_name(link_node_id);
+					if (link_node_name == NULL) {
+						RTE_LOG(INFO, USER1, "Ethdev tx node (%u:%u) get name failed\n",
+							tx_config.link_id, tx_config.queue_id);
+						rc = -ENOENT;
+						goto err;
+					}
+
+					node_patterns[nb_node_patterns++] = strdup(link_node_name);
+					rc = link_get_peer(tx_config.link_id, &peer_link_id);
+					if (rc < 0) {
+						RTE_LOG(INFO, USER1, "link_get_peer (%u) failed\n", tx_config.link_id);
+						continue;
+					}
+
+					rc = forward_node_data_add(
+						node_id,
+						peer_link_id,
+						link_node_name);
+					if (rc < 0) {
+						RTE_LOG(INFO, USER1, "Forward node (%s) add (%s) failed\n",
+							node_suffix, link_node_name);
+						goto err;
+
+					}
+				}
 			}
 		}
 
@@ -321,13 +370,15 @@ vswitch_start()
 			ev_node_id = eventdev_tx_node_clone(node_suffix);
 			if (ev_node_id == RTE_NODE_ID_INVALID) {
 				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) create failed\n", node_suffix);
-				continue;
+				rc = -ENOMEM;
+				goto err;
 			}
 
 			ev_node_name = rte_node_id_to_name(ev_node_id);
 			if (ev_node_name == NULL) {
 				RTE_LOG(INFO, USER1, "Eventdev tx node (%s) get name failed\n", node_suffix);
-				continue;
+				rc = -ENOENT;
+				goto err;
 			}
 
 			if (lcore->ev_in_queue_needed) {
@@ -340,12 +391,20 @@ vswitch_start()
 							RTE_EVENT_TYPE_CPU,
 							0,
 							RTE_EVENT_DEV_PRIORITY_NORMAL);
-				if (rc < 0)
+				if (rc < 0) {
+					RTE_LOG(INFO, USER1, "Eventdev tx node (%s) data add failed\n",
+						ev_node_name);
 					goto err;
+				}
 
-				rc = eventdev_dispatcher_set_next_eventdev(ev_node_name, core_id);
-				if (rc < 0)
+				rc = eventdev_dispatcher_add_next(ev_node_name, core_id);
+				if (rc < 0) {
+					RTE_LOG(INFO, USER1, "Eventdev dispatcher node add next (%s) failed\n",
+						ev_node_name);
 					goto err;
+				}
+
+				node_patterns[nb_node_patterns++] = strdup(ev_node_name);
 			} else {
 				rc = eventdev_tx_node_data_add(ev_node_id,
 							lcore->ev_id,
@@ -356,30 +415,35 @@ vswitch_start()
 							RTE_EVENT_TYPE_ETHDEV,
 							0,
 							RTE_EVENT_DEV_PRIORITY_NORMAL);
-				if (rc < 0)
+				if (rc < 0) {
+					RTE_LOG(INFO, USER1, "Eventdev tx node (%s) data add failed\n",
+						ev_node_name);
 					goto err;
-			}
-
-			node_patterns[nb_node_patterns++] = strdup(ev_node_name);
-			for (i = 0; i < lcore->nb_link_in_queues; i++) {
-				rx_config.link_id = lcore->link_in_queues[i].link_id;
-				rx_config.queue_id = lcore->link_in_queues[i].queue_id;
-				strncpy(rx_config.next_node, ev_node_name, sizeof(rx_config.next_node));
-				link_node_id = rte_node_ethdev_rx_config(&rx_config);
-				if (link_node_id == RTE_NODE_ID_INVALID) {
-					RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) create failed\n",
-						rx_config.link_id, rx_config.queue_id);
-					continue;
 				}
 
-				link_node_name = rte_node_id_to_name(link_node_id);
-				if (link_node_name == NULL) {
-					RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) get name failed\n",
-						rx_config.link_id, rx_config.queue_id);
-					continue;
-				}
+				node_patterns[nb_node_patterns++] = strdup(ev_node_name);
+				for (i = 0; i < lcore->nb_link_in_queues; i++) {
+					rx_config.link_id = lcore->link_in_queues[i].link_id;
+					rx_config.queue_id = lcore->link_in_queues[i].queue_id;
+					strncpy(rx_config.next_node, ev_node_name, sizeof(rx_config.next_node));
+					link_node_id = rte_node_ethdev_rx_config(&rx_config);
+					if (link_node_id == RTE_NODE_ID_INVALID) {
+						RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) create failed\n",
+							rx_config.link_id, rx_config.queue_id);
+						rc = -ENOMEM;
+						goto err;
+					}
 
-				node_patterns[nb_node_patterns++] = strdup(link_node_name);
+					link_node_name = rte_node_id_to_name(link_node_id);
+					if (link_node_name == NULL) {
+						RTE_LOG(INFO, USER1, "Ethdev rx node (%u:%u) get name failed\n",
+							rx_config.link_id, rx_config.queue_id);
+						rc = -ENOENT;
+						goto err;
+					}
+
+					node_patterns[nb_node_patterns++] = strdup(link_node_name);
+				}
 			}
 		}
 
@@ -391,6 +455,16 @@ vswitch_start()
 			"worker_%u", core_id);
 		lcore->graph_config.node_patterns = node_patterns;
 		lcore->graph_config.nb_node_patterns = nb_node_patterns;
+		if (config->params.enable_graph_pcap) {
+			lcore->graph_config.pcap_enable = 1;
+			lcore->graph_config.num_pkt_to_capture = 1000;
+			snprintf(pcap_filename, sizeof(pcap_filename),
+				"/tmp/worker_%u.pcap", core_id);
+			lcore->graph_config.pcap_filename = strdup(pcap_filename);
+		} else {
+			lcore->graph_config.pcap_enable = 0;
+		}
+
 	}
 
 	rc = rte_event_dev_service_id_get(config->ev_id, &config->ev_service_id);
@@ -421,7 +495,7 @@ vswitch_start()
 					"rte_graph_lookup(): graph %s not found\n",
 					lcore->graph_name);
 
-		// rte_graph_obj_dump(stderr, lcore->graph, true);
+		rte_graph_obj_dump(stderr, lcore->graph, true);
 		rte_eal_remote_launch(launch_graph_worker, lcore, core_id);
 	}
 
@@ -434,6 +508,7 @@ err:
 int
 vswitch_dump_stats(char const *file)
 {
+	const char *graph_disabled = "Graph stats not enabled";
 	struct rte_graph_cluster_stats_param s_param;
 	struct rte_graph_cluster_stats *stats;
 	const char *pattern = "worker_*";
@@ -447,20 +522,24 @@ vswitch_dump_stats(char const *file)
 		goto err;
 	}
 
-	memset(&s_param, 0, sizeof(s_param));
-	s_param.f = fp;
-	s_param.socket_id = SOCKET_ID_ANY;
-	s_param.graph_patterns = &pattern;
-	s_param.nb_graph_patterns = 1;
+	if (config->params.enable_graph_stats) {
+		memset(&s_param, 0, sizeof(s_param));
+		s_param.f = fp;
+		s_param.socket_id = SOCKET_ID_ANY;
+		s_param.graph_patterns = &pattern;
+		s_param.nb_graph_patterns = 1;
 
-	stats = rte_graph_cluster_stats_create(&s_param);
-	if (stats == NULL) {
-		rc = -EIO;
-		goto err;
+		stats = rte_graph_cluster_stats_create(&s_param);
+		if (stats == NULL) {
+			rc = -EIO;
+			goto err;
+		}
+
+		rte_graph_cluster_stats_get(stats, 0);
+		rte_delay_ms(1E3);
+	} else {
+		fprintf(fp, "%s\n", graph_disabled);
 	}
-
-	rte_graph_cluster_stats_get(stats, 0);
-	rte_delay_ms(1E3);
 
 err:
 	if (stats)

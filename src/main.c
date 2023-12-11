@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 	}
 
 	stage_init();
-	vswitch_init();
+	vswitch_init(&p);
 
 	rte_delay_ms(1);
 

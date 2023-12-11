@@ -111,10 +111,10 @@ eventdev_tx_node_process(struct rte_graph *graph,
 		events[i].op = ctx->op;
 		events[i].queue_id = ctx->queue_id;
 		events[i].sched_type = ctx->sched_type;
+		events[i].event_type = ctx->event_type;
 		events[i].mbuf = mbufs[i];
 		if (ctx->op == RTE_EVENT_OP_NEW) {
 			events[i].flow_id = ((struct rte_mbuf*)mbufs[i])->hash.rss;
-			events[i].event_type = ctx->event_type;
 			events[i].sub_event_type = ctx->sub_event_type;
 			events[i].priority = ctx->priority;
 		}

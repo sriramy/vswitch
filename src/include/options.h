@@ -15,6 +15,7 @@ struct params {
 	char *host;
 	uint16_t port;
 	bool enable_graph_stats;
+	bool enable_graph_pcap;
 };
 
 static const struct params params_default = {
@@ -22,7 +23,8 @@ static const struct params params_default = {
 	.graph_stats = NULL,
 	.host = "0.0.0.0",
 	.port = 8086,
-	.enable_graph_stats = true,
+	.enable_graph_stats = false,
+	.enable_graph_pcap = false,
 };
 
 int options_parse(struct params *p, int argc, char **argv);

@@ -3,8 +3,8 @@
   Copyright(c) 2023 Sriram Yagnaraman.
 */
 
-#ifndef __SRC_LIB_EVENTDEV_TX_H__
-#define __SRC_LIB_EVENTDEV_TX_H__
+#ifndef __SRC_LIB_NODE_EVENTDEV_TX_H__
+#define __SRC_LIB_NODE_EVENTDEV_TX_H__
 
 #include <rte_graph.h>
 
@@ -21,4 +21,4 @@ int eventdev_tx_node_data_add(rte_node_t node_id,
 			      uint8_t priority);
 int eventdev_tx_node_data_rem(rte_node_t node_id);
 
-#endif /* __SRC_LIB_EVENTDEV_TX_H__ */
+#endif /* __SRC_LIB_NODE_EVENTDEV_TX_H__ */

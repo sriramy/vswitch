@@ -22,38 +22,21 @@ static struct eventdev_rx_node_list node_list = {
 static struct eventdev_rx_node_item* eventdev_rx_node_data_get(rte_node_t node_id);
 
 int
-eventdev_rx_node_data_add_next_node(rte_node_t id, char const *edge_name) {
+eventdev_rx_node_data_set_next(rte_node_t node_id, char const *next_node)
+{
 	struct eventdev_rx_node_item *item;
-	char **next_nodes;
-	int i, rc = -EIO;
-	uint32_t count;
 
-	if (edge_name == NULL)
+	item = eventdev_rx_node_data_get(node_id);
+	if (!item)
+		return -ENOENT;
+
+	if (next_node == NULL)
 		return -EINVAL;
 
-	count = rte_node_edge_get(id, NULL);
-	if (count == RTE_EDGE_ID_INVALID)
-		return -EINVAL;
+	rte_node_edge_update(node_id, RTE_EDGE_ID_INVALID, &next_node, 1);
+	item->ctx.next_node = rte_node_edge_count(node_id) - 1;
 
-	next_nodes = rte_malloc(NULL, count, 0);
-	if (!next_nodes)
-		return -ENOMEM;
-
-	count = rte_node_edge_get(id, next_nodes);
-	for (i = 0; next_nodes[i]; i++) {
-		if (strcmp(edge_name, next_nodes[i]) == 0) {
-			item = eventdev_rx_node_data_get(id);
-			if (item) {
-				item->ctx.next_node = i;
-				rc = 0;
-				break;
-			}
-		}
-		i++;
-	}
-
-	rte_free(next_nodes);
-	return rc;
+	return 0;
 }
 
 int
@@ -123,22 +106,29 @@ eventdev_rx_node_process(struct rte_graph *graph,
 			 __rte_unused uint16_t cnt)
 {
 	struct eventdev_rx_node_ctx *ctx = (struct eventdev_rx_node_ctx *)node->ctx;
+	bool ev_dispatcher = (ctx->next_node == EVENTDEV_RX_NEXT_DISPATCHER);
 	struct rte_event events[RTE_GRAPH_BURST_SIZE];
 	uint16_t n_events = 0;
 	int i, timeout = 0;
 
-	if (likely(rte_mempool_get_bulk(ctx->mp, node->objs, RTE_GRAPH_BURST_SIZE)) == 0) {
-		n_events = rte_event_dequeue_burst(ctx->ev_id,
-						   ctx->ev_port_id,
-						   events,
-						   RTE_GRAPH_BURST_SIZE,
-						   timeout);
-		if (n_events) {
+	n_events = rte_event_dequeue_burst(ctx->ev_id,
+						ctx->ev_port_id,
+						events,
+						RTE_GRAPH_BURST_SIZE,
+						timeout);
+	if (n_events) {
+		if (likely(rte_mempool_get_bulk(ctx->mp, node->objs, n_events)) == 0) {
 			for (i = 0; i < n_events; i++) {
-				node->objs[i] = &events[i];
+				if (ev_dispatcher)
+					node->objs[i] = &events[i];
+				else
+					node->objs[i] = events[i].mbuf;
 			}
 			node->idx = n_events;
 			rte_node_next_stream_move(graph, node, ctx->next_node);
+
+			if (!ev_dispatcher)
+				rte_mempool_put_bulk(ctx->mp, node->objs, n_events);
 		}
 	}
 
