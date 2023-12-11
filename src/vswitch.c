@@ -430,3 +430,42 @@ vswitch_start()
 err:
 	return rc;
 }
+
+int
+vswitch_dump_stats(char const *file)
+{
+	struct rte_graph_cluster_stats_param s_param;
+	struct rte_graph_cluster_stats *stats;
+	const char *pattern = "worker_*";
+	FILE *fp = NULL;
+	int rc = 0;
+
+	/* Prepare stats object */
+	fp = fopen(file, "w");
+	if (fp == NULL) {
+		rc = -rte_errno;
+		goto err;
+	}
+
+	memset(&s_param, 0, sizeof(s_param));
+	s_param.f = fp;
+	s_param.socket_id = SOCKET_ID_ANY;
+	s_param.graph_patterns = &pattern;
+	s_param.nb_graph_patterns = 1;
+
+	stats = rte_graph_cluster_stats_create(&s_param);
+	if (stats == NULL) {
+		rc = -EIO;
+		goto err;
+	}
+
+	rte_graph_cluster_stats_get(stats, 0);
+	rte_delay_ms(1E3);
+
+err:
+	if (stats)
+		rte_graph_cluster_stats_destroy(stats);
+	if (fp)
+		fclose(fp);
+	return rc;
+}

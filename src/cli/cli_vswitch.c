@@ -78,12 +78,42 @@ cli_vswitch_start(__rte_unused void *parsed_result, struct cmdline *cl, __rte_un
 		cmdline_printf(cl, "Done.\n");
 }
 
+static void
+cli_vswitch_stats(__rte_unused void *parsed_result, struct cmdline *cl, __rte_unused void *data)
+{
+	FILE *fp;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int rc;
+
+        rc = vswitch_dump_stats(TMP_STATS_FILE);
+	if (rc < 0) {
+                cmdline_printf(cl, "Vswitch stats failed: %s\n", rte_strerror(-rc));
+		return;
+	}
+
+	fp = fopen(TMP_STATS_FILE, "r");
+	if (fp) {
+		while ((read = getline(&line, &len, fp)) != -1) {
+			cmdline_printf(cl, "%s", line);
+		}
+	} else {
+		cmdline_printf(cl, "Vswitch stats file open failed: %s\n", rte_strerror(-rte_errno));
+	}
+
+	free(line);
+	fclose(fp);
+}
+
 cmdline_parse_token_string_t vswitch_cmd =
 	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, cmd, "vswitch");
 cmdline_parse_token_string_t vswitch_action_show =
 	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, action, "show");
 cmdline_parse_token_string_t vswitch_action_start =
 	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, action, "start");
+cmdline_parse_token_string_t vswitch_action_stats =
+	TOKEN_STRING_INITIALIZER(struct vswitch_cmd_tokens, action, "stats");
 
 cmdline_parse_inst_t vswitch_show_cmd_ctx = {
 	.f = cli_vswitch_show,
@@ -103,6 +133,17 @@ cmdline_parse_inst_t vswitch_start_cmd_ctx = {
 	.tokens = {
 		(void *)&vswitch_cmd,
                 (void *)&vswitch_action_start,
+		NULL,
+	},
+};
+
+cmdline_parse_inst_t vswitch_stats_cmd_ctx = {
+	.f = cli_vswitch_stats,
+	.data = NULL,
+	.help_str = "vswitch stats",
+	.tokens = {
+		(void *)&vswitch_cmd,
+                (void *)&vswitch_action_stats,
 		NULL,
 	},
 };

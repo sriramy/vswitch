@@ -48,6 +48,7 @@ cmdline_parse_ctx_t commands_ctx[] = {
 
 	(cmdline_parse_inst_t *)&vswitch_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&vswitch_start_cmd_ctx,
+	(cmdline_parse_inst_t *)&vswitch_stats_cmd_ctx,
 
 	NULL,
 };

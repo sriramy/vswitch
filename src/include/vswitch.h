@@ -63,5 +63,6 @@ int vswitch_quit();
 struct vswitch_config* vswitch_config_get();
 
 int vswitch_start();
+int vswitch_dump_stats(char const *file);
 
 #endif /* __VSWITCH_SRC_API_VSWITCH_H_ */
