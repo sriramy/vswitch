@@ -10,7 +10,7 @@
 #include <rte_graph.h>
 
 enum eventdev_tx_next_nodes {
-	EVENTDEV_TX_NEXT_PKT_DROP,
+	EVENTDEV_TX_NEXT_PKT_DROP = 0,
 	EVENTDEV_TX_NEXT_MAX,
 };
 

@@ -11,16 +11,16 @@
 #include <rte_mempool.h>
 
 enum eventdev_rx_next_nodes {
-        EVENTDEV_RX_NEXT_DISPATCHER,
+        EVENTDEV_RX_NEXT_DISPATCHER = 0,
 	EVENTDEV_RX_NEXT_PKT_DROP,
 	EVENTDEV_RX_NEXT_MAX,
 };
 
 struct eventdev_rx_node_ctx {
+        rte_node_t next_node;
         uint8_t ev_id;
         uint8_t ev_port_id;
         struct rte_mempool *mp;
-        rte_node_t next_node;
 };
 
 struct eventdev_rx_node_item {

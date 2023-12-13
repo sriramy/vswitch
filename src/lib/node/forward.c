@@ -114,7 +114,7 @@ forward_node_init(__rte_unused const struct rte_graph *graph, struct rte_node *n
 	struct forward_node_item *item = forward_node_data_get(node->id);
 
 	if (item)
-		memcpy(ctx, &item->ctx, sizeof(item->ctx));
+		memcpy(ctx, &item->ctx, sizeof(node->ctx));
 
 	RTE_VERIFY(item != NULL);
 

@@ -10,7 +10,7 @@
 #include <rte_graph.h>
 
 enum forward_next_nodes {
-	FORWARD_NEXT_PKT_DROP,
+	FORWARD_NEXT_PKT_DROP = 0,
 	FORWARD_NEXT_MAX,
 };
 

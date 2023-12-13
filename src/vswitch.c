@@ -34,13 +34,13 @@ launch_graph_worker(void *arg)
 	struct lcore_params *lcore = (struct lcore_params*) arg;
 	uint16_t core_id = rte_lcore_id();
 
-	RTE_LOG(INFO, USER1, "Lcore %u (%s) starting\n", core_id, stage_type_str[lcore->type]);
+	RTE_LOG(INFO, USER1, "Lcore %u (%s) started\n", core_id, stage_type_str[lcore->type]);
 
 	while(1) {
 		rte_graph_walk(lcore->graph);
 	}
 
-	RTE_LOG(INFO, USER1, "Lcore %u (%s) stopping\n", core_id, stage_type_str[lcore->type]);
+	RTE_LOG(INFO, USER1, "Lcore %u (%s) stopped\n", core_id, stage_type_str[lcore->type]);
 
 	return 0;
 }
@@ -495,7 +495,6 @@ vswitch_start()
 					"rte_graph_lookup(): graph %s not found\n",
 					lcore->graph_name);
 
-		rte_graph_obj_dump(stderr, lcore->graph, true);
 		rte_eal_remote_launch(launch_graph_worker, lcore, core_id);
 	}
 
