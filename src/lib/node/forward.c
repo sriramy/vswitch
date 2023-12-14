@@ -15,6 +15,8 @@
 #include "forward_priv.h"
 #include "forward.h"
 
+static struct forward_node_data node_main;
+
 static struct forward_node_list node_list = {
 	.head = NULL,
 };
@@ -35,14 +37,15 @@ forward_node_data_add(rte_node_t node_id, uint16_t link_id, const char *next_nod
 			return -ENOMEM;
 
 		memset(&item->ctx, 0, sizeof(item->ctx));
+		item->ctx.data = &node_main;
 		item->node_id = node_id;
 		item->prev = NULL;
 		item->next = node_list.head;
 		node_list.head = item;
 	}
 
-	item->ctx.next_nodes[link_id].enabled = 1;
-	item->ctx.next_nodes[link_id].id = rte_node_edge_count(node_id) - 1;
+	item->ctx.data->next_nodes[link_id].enabled = 1;
+	item->ctx.data->next_nodes[link_id].id = rte_node_edge_count(node_id) - 1;
 
 	return 0;
 }
@@ -95,12 +98,13 @@ forward_node_process(struct rte_graph *graph,
 
 	for (i = 0; i < count; i++) {
 		mbuf = (struct rte_mbuf*)mbufs[i];
-		if (ctx->next_nodes[mbuf->port].enabled)
-			next_index = ctx->next_nodes[mbuf->port].id;
+		if (ctx->data->next_nodes[mbuf->port].enabled)
+			next_index = ctx->data->next_nodes[mbuf->port].id;
+
 		rte_node_enqueue(graph,
 				 node,
 				 next_index,
-				 (void**) &mbuf[i],
+				 (void**) &mbuf,
 				 1);
 	}
 
@@ -112,6 +116,8 @@ forward_node_init(__rte_unused const struct rte_graph *graph, struct rte_node *n
 {
 	struct forward_node_ctx *ctx = (struct forward_node_ctx *)node->ctx;
 	struct forward_node_item *item = forward_node_data_get(node->id);
+
+	RTE_VERIFY(sizeof(*ctx) <= sizeof(node->ctx));
 
 	if (item)
 		memcpy(ctx, &item->ctx, sizeof(node->ctx));

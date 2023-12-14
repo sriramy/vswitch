@@ -29,9 +29,12 @@ eventdev_dispatcher_node_process(struct rte_graph *graph,
 	struct rte_event *event;
 	int i;
 
+	if (ctx->port_id == RTE_MAX_LCORE)
+		ctx->port_id = rte_lcore_id();
+
 	for (i = 0; i < count; i++) {
 		event = (struct rte_event *)events[i];
-		if (ctx->data->next[ctx->port_id].enabled)
+		if (ctx->data->next[ctx->port_id].enabled != 0)
 			next_index = ctx->data->next[ctx->port_id].id;
 		rte_node_enqueue(graph,
 				 node,
@@ -82,7 +85,9 @@ eventdev_dispatcher_node_init(__rte_unused const struct rte_graph *graph, struct
 {
 	struct eventdev_dispatcher_node_ctx *ctx = (struct eventdev_dispatcher_node_ctx *)node->ctx;
 
-	ctx->port_id = rte_lcore_id();
+	RTE_VERIFY(sizeof(*ctx) <= sizeof(node->ctx));
+
+	ctx->port_id = RTE_MAX_LCORE;
 	ctx->data = &node_main;
 
 	return 0;

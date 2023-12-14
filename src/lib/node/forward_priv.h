@@ -14,17 +14,22 @@ enum forward_next_nodes {
 	FORWARD_NEXT_MAX,
 };
 
-struct forward_node_ctx {
-	struct {
+struct forward_node_data {
+        struct {
 		rte_edge_t id;
 		uint8_t enabled;
 	} next_nodes[RTE_MAX_ETHPORTS];
+};
+
+struct forward_node_ctx {
+        struct forward_node_data *data;
 };
 
 struct forward_node_item {
         struct forward_node_item *next;
         struct forward_node_item *prev;
         struct forward_node_ctx ctx;
+
         rte_node_t node_id;
 };
 

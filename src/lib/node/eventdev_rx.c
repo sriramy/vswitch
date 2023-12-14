@@ -141,6 +141,8 @@ eventdev_rx_node_init(__rte_unused const struct rte_graph *graph, struct rte_nod
 	struct eventdev_rx_node_ctx *ctx = (struct eventdev_rx_node_ctx *)node->ctx;
 	struct eventdev_rx_node_item *item = eventdev_rx_node_data_get(node->id);
 
+	RTE_VERIFY(sizeof(*ctx) <= sizeof(node->ctx));
+
 	if (item)
 		memcpy(ctx, &item->ctx, sizeof(node->ctx));
 
