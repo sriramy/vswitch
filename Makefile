@@ -28,7 +28,7 @@ stubs: $(CMD_GEN_H)
 vswitch: $(VSWITCH_SRC_DIR)/*
 	@echo "  vswitch"
 	$(Q)meson setup build --buildtype debug $(P)
-	$(Q)meson configure build --buildtype debug $(P)
+	$(Q)meson configure build --buildtype debug --pkg-config-path $(PKG_CONFIG_PATH) $(P)
 	$(Q)meson compile -C build $(P)
 
 .PHONY: vsnl-interceptor

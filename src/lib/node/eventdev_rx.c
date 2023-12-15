@@ -130,6 +130,8 @@ eventdev_rx_node_process(struct rte_graph *graph,
 			if (!ev_dispatcher)
 				rte_mempool_put_bulk(ctx->mp, node->objs, n_events);
 		}
+	} else {
+		rte_pause();
 	}
 
 	return n_events;
