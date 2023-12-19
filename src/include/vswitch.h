@@ -44,6 +44,7 @@ struct lcore_params {
 		uint8_t queue_id;
 	} link_out_queues[STAGE_MAX_LINK_QUEUES];
 
+	char nodes[STAGE_GRAPH_NODES_MAX_LEN];
 	struct rte_graph_param graph_config;
 	struct rte_graph *graph;
 	char graph_name[RTE_GRAPH_NAMESIZE];

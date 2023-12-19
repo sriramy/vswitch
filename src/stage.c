@@ -334,7 +334,7 @@ stage_config_set_link_queue_out(char const *name, char const *link_name, uint8_t
 	int i;
 
         if (s && l) {
-		// Only valid for RX cores
+		// Only valid for TX cores
 		if (s->config.type != STAGE_TYPE_TX)
 			return -EINVAL;
 
@@ -361,6 +361,19 @@ stage_config_set_link_queue_out(char const *name, char const *link_name, uint8_t
 		}
 
 		return -ENOBUFS;
+        }
+
+        return -ENOENT;
+}
+
+int
+stage_config_set_graph_nodes(char const *name, char const *graph_nodes)
+{
+        struct stage *s = stage_config_get(name);
+
+        if (s) {
+		strncpy(s->config.nodes, graph_nodes, STAGE_GRAPH_NODES_MAX_LEN);
+                return 0;
         }
 
         return -ENOENT;

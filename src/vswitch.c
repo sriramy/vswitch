@@ -120,6 +120,7 @@ stage_get_lcore_config(__rte_unused struct stage_config *stage_config, __rte_unu
 			lcore = &config->lcores[core_id];
 			lcore->enabled = 1;
 			lcore->type = stage_config->type;
+			strncpy(lcore->nodes, stage_config->nodes, STAGE_GRAPH_NODES_MAX_LEN);
 			lcore->ev_port_config.dequeue_depth = 128;
 			lcore->ev_port_config.enqueue_depth = 128;
 			lcore->ev_port_config.new_event_threshold = 4096;
@@ -445,6 +446,12 @@ vswitch_start()
 					node_patterns[nb_node_patterns++] = strdup(link_node_name);
 				}
 			}
+		}
+
+		node_name = strtok(lcore->nodes, ",");
+		while (node_name != NULL) {
+			node_patterns[nb_node_patterns++] = strdup(node_name);
+			node_name = strtok(NULL, ",");
 		}
 
 		RTE_LOG(DEBUG, USER1, "Core (%u) create graph with patterns:\n", core_id);

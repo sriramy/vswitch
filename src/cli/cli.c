@@ -45,6 +45,7 @@ cmdline_parse_ctx_t commands_ctx[] = {
 	(cmdline_parse_inst_t *)&stage_set_queue_out_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_set_link_queue_in_cmd_ctx,
 	(cmdline_parse_inst_t *)&stage_set_link_queue_out_cmd_ctx,
+	(cmdline_parse_inst_t *)&stage_set_graph_nodes_cmd_ctx,
 
 	(cmdline_parse_inst_t *)&vswitch_show_cmd_ctx,
 	(cmdline_parse_inst_t *)&vswitch_start_cmd_ctx,

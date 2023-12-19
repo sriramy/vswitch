@@ -26,6 +26,8 @@ struct stage_cmd_tokens {
 	cmdline_fixed_string_t mp_name;
 	cmdline_fixed_string_t link;
 	cmdline_fixed_string_t dev;
+	cmdline_fixed_string_t graph;
+	cmdline_fixed_string_t nodes;
 	uint32_t mask;
 	uint8_t in_qid;
 	uint8_t out_qid;
@@ -40,5 +42,6 @@ extern cmdline_parse_inst_t stage_set_queue_in_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_queue_out_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_link_queue_in_cmd_ctx;
 extern cmdline_parse_inst_t stage_set_link_queue_out_cmd_ctx;
+extern cmdline_parse_inst_t stage_set_graph_nodes_cmd_ctx;
 
 #endif /* __VSWITCH_SRC_CLI_STAGE_H_*/

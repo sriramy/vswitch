@@ -8,9 +8,10 @@
 
 #include <rte_eventdev.h>
 
-#define STAGE_NAME_MAX_LEN	(64)
-#define STAGE_MAX		(16)
-#define STAGE_MAX_LINK_QUEUES	(8)
+#define STAGE_NAME_MAX_LEN		(64)
+#define STAGE_MAX			(16)
+#define STAGE_MAX_LINK_QUEUES		(8)
+#define STAGE_GRAPH_NODES_MAX_LEN	(512)
 
 extern char const *stage_type_str[];
 
@@ -44,6 +45,7 @@ struct stage_config {
 	struct stage_link_queue_config link_in_queue[STAGE_MAX_LINK_QUEUES];
 	struct stage_link_queue_config link_out_queue[STAGE_MAX_LINK_QUEUES];
 	struct stage_ev_queue_config ev_queue;
+	char nodes[STAGE_GRAPH_NODES_MAX_LEN];
 };
 
 struct stage {
@@ -69,6 +71,7 @@ int stage_config_set_ev_queue_in(char const *name, uint8_t qid, uint8_t schedule
 int stage_config_set_ev_queue_out(char const *name, uint8_t qid, uint8_t schedule_type);
 int stage_config_set_link_queue_in(char const *name, char const *link_name, uint8_t qid);
 int stage_config_set_link_queue_out(char const *name, char const *link_name, uint8_t qid);
+int stage_config_set_graph_nodes(char const *name, char const *nodes);
 
 int stage_config_walk(stage_config_cb cb, void *data);
 

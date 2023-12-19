@@ -12,4 +12,5 @@ sources += files(
         'node/eventdev_rx.c',
         'node/eventdev_tx.c',
         'node/forward.c',
+        'node/classifier.c',
 )
