@@ -9,48 +9,8 @@
 #include <rte_eventdev.h>
 #include <rte_graph.h>
 
+#include "lcore.h"
 #include "options.h"
-
-#define EV_QUEUE_ID_INVALID	(0xFF)
-#define GRAPH_MAX_PATTERNS	(16)
-
-struct link_queues {
-	uint16_t link_id;
-	uint8_t queue_id;
-};
-
-struct lcore_params {
-	uint16_t core_id;
-	uint16_t enabled;
-	uint8_t ev_id;
-	uint8_t ev_port_id;
-	uint8_t type;
-	uint8_t ev_in_queue_needed;
-	uint8_t ev_in_queue_sched_type;
-	uint8_t ev_in_queue;
-	char ev_in_queue_mp_name[RTE_MEMPOOL_NAMESIZE];
-	uint8_t ev_out_queue_needed;
-	uint8_t ev_out_queue_sched_type;
-	uint8_t ev_out_queue;
-	struct rte_event_port_conf ev_port_config;
-	uint8_t nb_link_in_queues;
-	uint8_t nb_link_out_queues;
-	struct {
-		uint16_t link_id;
-		uint8_t queue_id;
-	} link_in_queues[STAGE_MAX_LINK_QUEUES];
-	struct {
-		uint16_t link_id;
-		uint8_t queue_id;
-	} link_out_queues[STAGE_MAX_LINK_QUEUES];
-
-	char nodes[STAGE_GRAPH_NODES_MAX_LEN];
-	struct rte_graph_param graph_config;
-	struct rte_graph *graph;
-	char graph_name[RTE_GRAPH_NAMESIZE];
-	rte_graph_t graph_id;
-
-} __rte_cache_aligned;
 
 struct vswitch_config {
 	struct params params;

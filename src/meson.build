@@ -9,6 +9,7 @@ endif
 
 sources = files(
         'conn.c',
+        'lcore.c',
         'link.c',
         'mempool.c',
         'options.c',
