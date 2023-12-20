@@ -359,9 +359,13 @@ err:
 	return rc;
 }
 
-void
-lcore_graph_init(struct lcore_params *lcore)
+int
+lcore_graph_worker(void *arg)
 {
+	struct lcore_params *lcore = (struct lcore_params*) arg;
+
+	RTE_LOG(INFO, USER1, "Lcore %u (%s) started\n", lcore->core_id, stage_type_str[lcore->type]);
+
 	lcore->graph_id = rte_graph_create(lcore->graph_name, &lcore->graph_config);
 	if (lcore->graph_id == RTE_GRAPH_ID_INVALID)
 		rte_exit(EXIT_FAILURE,
@@ -373,14 +377,6 @@ lcore_graph_init(struct lcore_params *lcore)
 		rte_exit(EXIT_FAILURE,
 				"rte_graph_lookup(): graph %s not found\n",
 				lcore->graph_name);
-}
-
-int
-lcore_graph_worker(void *arg)
-{
-	struct lcore_params *lcore = (struct lcore_params*) arg;
-
-	RTE_LOG(INFO, USER1, "Lcore %u (%s) started\n", lcore->core_id, stage_type_str[lcore->type]);
 
 	while(1) {
 		rte_graph_walk(lcore->graph);

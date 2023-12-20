@@ -122,7 +122,6 @@ int
 vswitch_start()
 {
 	struct rte_event_dev_config ev_config;
-	struct lcore_params *lcore;
 	uint16_t core_id;
 	int rc = -EINVAL;
 
@@ -166,10 +165,7 @@ vswitch_start()
 	}
 
 	RTE_LCORE_FOREACH_WORKER(core_id) {
-		lcore = &config->lcores[core_id];
-
-		lcore_graph_init(lcore);
-		rte_eal_remote_launch(lcore_graph_worker, lcore, core_id);
+		rte_eal_remote_launch(lcore_graph_worker, &config->lcores[core_id], core_id);
 	}
 
 	return 0;

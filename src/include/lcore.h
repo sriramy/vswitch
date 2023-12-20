@@ -49,7 +49,6 @@ struct lcore_params {
 void lcore_init(uint16_t core_id, uint8_t ev_id, struct lcore_params *lcore);
 int lcore_config_populate(struct stage_config *stage_config, uint8_t ev_port_id, struct lcore_params *lcore);
 int lcore_graph_populate(struct lcore_params *lcore, bool enable_graph_pcap);
-void lcore_graph_init(struct lcore_params *lcore);
 int lcore_graph_worker(void *arg);
 
 
